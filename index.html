@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#164b40">
+  <meta name="description" content="yoxi Care+ 長者安心乘車，簡單安排回診與接送規劃的操作展示網站。">
+  <title>yoxi Care+｜長者安心乘車</title>
+  <link rel="stylesheet" href="./assets/style.css">
+  <script src="./assets/app.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">跳至主要內容</a>
+<div class="app-shell">
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="yoxi Care+ 首頁"><span class="brand-mark">+</span><span>yoxi <strong>Care+</strong></span></a>
+    <button type="button" class="font-button" id="font-toggle" data-action="font" aria-pressed="false">字再大一點</button>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <section id="page-home" class="page" aria-label="首頁">
+      <div class="page-intro"><span class="eyebrow">安心出門，簡單回家</span><h1>您要去哪裡？</h1><p>選擇要去的地方，我們一起把搭車資訊準備好。</p></div>
+      <div class="main-actions">
+        <button type="button" class="destination primary" data-action="open-ride" data-direction="outbound"><span class="destination-icon" aria-hidden="true">✚</span><span>我要去醫院<small>前往回診、看診</small></span><span class="arrow" aria-hidden="true">›</span></button>
+        <button type="button" class="destination secondary" data-action="open-ride" data-direction="return"><span class="destination-icon" aria-hidden="true">⌂</span><span>我要回家<small>安排回程交通</small></span><span class="arrow" aria-hidden="true">›</span></button>
+      </div>
+      <section class="card" aria-labelledby="next-heading"><div class="section-heading"><h2 id="next-heading">下一次回診</h2><button type="button" class="small-link" data-view="appointments">全部回診</button></div><div id="home-next" aria-live="polite"></div></section>
+      <section class="card" aria-labelledby="ride-heading"><div class="section-heading"><h2 id="ride-heading">最近的用車規劃</h2><button type="button" class="small-link" data-view="rides">用車紀錄</button></div><div id="home-ride" aria-live="polite"></div></section>
+    </section>
+
+    <section id="page-appointments" class="page" aria-label="我的回診" hidden>
+      <div class="page-intro small"><span class="eyebrow">我的行事曆</span><h1>我的回診</h1><p>自行記下醫院通知的日期與時間。</p></div>
+      <button type="button" class="btn primary full add-button" data-action="open-appointment">＋ 新增回診</button>
+      <div id="appointment-list" class="records"></div>
+    </section>
+
+    <section id="page-rides" class="page" aria-label="用車紀錄" hidden>
+      <div class="page-intro small"><span class="eyebrow">我的交通安排</span><h1>用車紀錄</h1><p>查看已儲存的規劃，也可以取消不需要的安排。</p></div>
+      <div id="ride-list" class="records"></div>
+    </section>
+
+    <section id="page-help" class="page" aria-label="設定" hidden>
+      <div class="page-intro small"><span class="eyebrow">個人偏好</span><h1>設定</h1><p>設定常用的住家地址，之後安排用車更方便。</p></div>
+      <form id="prefs-form" class="card prefs-card"><label for="homeAddress">我的住家地址</label><input id="homeAddress" name="homeAddress" autocomplete="street-address" maxlength="120" placeholder="例如：苗栗市○○路 12 號"><p class="help-text">僅儲存在目前瀏覽器，沒有上傳至伺服器。</p><button type="submit" class="btn primary full">儲存地址</button></form>
+      <section class="card extra-card" aria-labelledby="font-heading"><h2 id="font-heading">文字大小</h2><p>覺得文字不夠清楚嗎？可以切換較大的字。</p><button class="btn secondary full" type="button" data-action="font" id="font-toggle-secondary">字再大一點</button></section>
+    </section>
+
+  </main>
+  <nav class="bottom-nav" aria-label="主要選單">
+    <button type="button" class="is-current" data-view="home" aria-current="page"><span class="nav-icon" aria-hidden="true">⌂</span><span>首頁</span></button>
+    <button type="button" data-view="appointments"><span class="nav-icon" aria-hidden="true">▣</span><span>回診</span></button>
+    <button type="button" data-view="rides"><span class="nav-icon" aria-hidden="true">▤</span><span>紀錄</span></button>
+    <button type="button" data-view="help"><span class="nav-icon" aria-hidden="true">⚙</span><span>設定</span></button>
+  </nav>
+</div>
+
+<dialog class="modal" id="appointment-dialog" aria-labelledby="appointment-modal-title">
+  <form id="appointment-form" novalidate>
+    <div class="modal-head"><h2 id="appointment-modal-title">新增回診</h2><button type="button" class="close-button" data-action="close-dialog" aria-label="關閉回診視窗">關閉</button></div>
+    <p class="modal-sub">請依照醫院通知的時間填寫。</p><input type="hidden" id="appointment-id">
+    <div class="field-row"><div class="field"><label for="appointment-date">回診日期 <em>必填</em></label><input type="date" id="appointment-date" required></div><div class="field"><label for="appointment-time">看診時間 <em>必填</em></label><input type="time" id="appointment-time" required></div></div>
+    <div class="field"><label for="appointment-hospital">醫院或診所名稱 <em>必填</em></label><input id="appointment-hospital" type="text" placeholder="例如：苗栗醫院" maxlength="70" required></div>
+    <details class="optional"><summary>地址與備註（選填）</summary><div class="field"><label for="appointment-address">醫院地址</label><input id="appointment-address" type="text" maxlength="120" placeholder="例如：苗栗市為公路 747 號"></div><div class="field"><label for="appointment-note">備註</label><textarea id="appointment-note" rows="2" maxlength="150" placeholder="例如：攜帶健保卡"></textarea></div></details>
+    <p class="form-error" id="appointment-error" role="alert" hidden></p>
+    <button class="btn primary full submit-btn" type="submit">儲存回診</button><button type="button" class="btn ghost full" data-action="close-dialog">先不儲存</button>
+  </form>
+</dialog>
+
+<dialog class="modal" id="ride-dialog" aria-labelledby="ride-modal-title">
+  <form id="ride-form" novalidate>
+    <div class="modal-head"><h2 id="ride-modal-title">安排用車</h2><button type="button" class="close-button" data-action="close-dialog" aria-label="關閉用車視窗">關閉</button></div>
+    <p class="modal-sub">確認上下車地點與時間。此操作不會真的叫車。</p>
+    <div class="direction-picker" role="group" aria-label="搭車方向"><button type="button" id="outbound-button" class="direction-choice active" data-action="change-direction" data-direction="outbound" aria-pressed="true">去醫院</button><button type="button" id="return-button" class="direction-choice" data-action="change-direction" data-direction="return" aria-pressed="false">回家</button></div>
+    <input type="hidden" id="ride-appointment-id"><div class="field"><label for="ride-pickup">從哪裡上車？ <em>必填</em></label><input id="ride-pickup" type="text" maxlength="120" required placeholder="請輸入上車地點"></div><div class="field"><label for="ride-destination">要去哪裡？ <em>必填</em></label><input id="ride-destination" type="text" maxlength="120" required placeholder="請輸入目的地"></div>
+    <div class="field-row"><div class="field"><label for="ride-date">搭車日期 <em>必填</em></label><input type="date" id="ride-date" required></div><div class="field"><label for="ride-time">搭車時間 <em>必填</em></label><input type="time" id="ride-time" required></div></div>
+    <p class="form-error" id="ride-error" role="alert" hidden></p>
+    <button class="btn primary full submit-btn" type="submit">儲存用車規劃</button><button type="button" class="btn ghost full" data-action="close-dialog">先不安排</button>
+  </form>
+</dialog>
+
+<dialog class="modal confirm-modal" id="confirm-dialog" aria-labelledby="confirm-title">
+  <div class="modal-head"><h2 id="confirm-title">確定要取消嗎？</h2><button type="button" class="close-button" data-action="close-dialog" aria-label="關閉確認視窗">關閉</button></div><p id="confirm-message"></p>
+  <div class="confirm-actions"><button type="button" class="btn secondary" data-action="close-dialog">保留</button><button type="button" class="btn danger" id="confirm-yes">確認取消</button></div>
+</dialog>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>
