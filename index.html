@@ -14,7 +14,7 @@
 <div class="app-shell">
   <header class="topbar">
     <a class="brand" href="./" aria-label="yoxi Care+ 首頁"><span class="brand-mark">+</span><span>yoxi <strong>Care+</strong></span></a>
-    <button type="button" class="font-button" id="font-toggle" data-action="font" aria-pressed="false">字再大一點</button>
+    <button type="button" class="font-button" id="font-toggle" data-action="open-font-dialog" aria-haspopup="dialog" aria-controls="font-dialog">字體：一般</button>
   </header>
 
   <main id="main" tabindex="-1">
@@ -42,7 +42,7 @@
     <section id="page-help" class="page" aria-label="設定" hidden>
       <div class="page-intro small"><span class="eyebrow">個人偏好</span><h1>設定</h1><p>設定常用的住家地址，之後安排用車更方便。</p></div>
       <form id="prefs-form" class="card prefs-card"><label for="homeAddress">我的住家地址</label><input id="homeAddress" name="homeAddress" autocomplete="street-address" maxlength="120" placeholder="例如：苗栗市○○路 12 號"><p class="help-text">僅儲存在目前瀏覽器，沒有上傳至伺服器。</p><button type="submit" class="btn primary full">儲存地址</button></form>
-      <section class="card extra-card" aria-labelledby="font-heading"><h2 id="font-heading">文字大小</h2><p>覺得文字不夠清楚嗎？可以切換較大的字。</p><button class="btn secondary full" type="button" data-action="font" id="font-toggle-secondary">字再大一點</button></section>
+      <section class="card extra-card" aria-labelledby="font-heading"><h2 id="font-heading">文字大小</h2><p>覺得文字不夠清楚嗎？可以切換較大的字。</p><button class="btn secondary full" type="button" data-action="open-font-dialog" id="font-toggle-secondary" aria-haspopup="dialog" aria-controls="font-dialog">選擇字體大小（目前：一般）</button></section>
     </section>
 
   </main>
@@ -53,6 +53,17 @@
     <button type="button" data-view="help"><span class="nav-icon" aria-hidden="true">⚙</span><span>設定</span></button>
   </nav>
 </div>
+
+<dialog class="modal font-modal" id="font-dialog" aria-labelledby="font-modal-title">
+  <div class="modal-head"><h2 id="font-modal-title">選擇字體大小</h2><button type="button" class="close-button" data-action="close-dialog" aria-label="關閉字體大小選單">關閉</button></div>
+  <p class="modal-sub">選擇最容易閱讀的大小，可隨時再調整。</p>
+  <div class="font-options" role="group" aria-label="字體大小選項">
+    <button type="button" class="font-option" data-action="set-font" data-font-size="normal" aria-pressed="true">一般</button>
+    <button type="button" class="font-option" data-action="set-font" data-font-size="large" aria-pressed="false">大</button>
+    <button type="button" class="font-option" data-action="set-font" data-font-size="xlarge" aria-pressed="false">特大</button>
+    <button type="button" class="font-option" data-action="set-font" data-font-size="xxlarge" aria-pressed="false">超大</button>
+  </div>
+</dialog>
 
 <dialog class="modal" id="appointment-dialog" aria-labelledby="appointment-modal-title">
   <form id="appointment-form" novalidate>

@@ -57,7 +57,7 @@ function readText(id,label,max,required=false){
 }
 function upcoming(){return state.appointments.filter(a=>timestamp(a.date,a.time)>=Date.now()-60_000).sort((a,b)=>timestamp(a.date,a.time)-timestamp(b.date,b.time));}
 function orderedRides(){return [...state.rides].sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));}
-function toast(message){const t=$('toast');t.textContent=message;t.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.hidden=true,4300);}
+function toast(message,duration=2600){const t=$('toast');t.textContent=message;t.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.hidden=true;},duration);}
 function showError(id,message){const node=$(id);node.textContent=message;node.hidden=false;}
 function clearError(id){const node=$(id);node.hidden=true;node.textContent='';}
 function openDialog(id){const dialog=$(id);if(!dialog.open)dialog.showModal();}
@@ -102,14 +102,19 @@ function renderRides(){
   }).join(''):`<div class="empty-state"><h3>還沒有用車紀錄</h3><p>點選首頁的「我要去醫院」或「我要回家」即可安排。</p><button type="button" class="btn primary" data-view="home">回首頁</button></div>`;
 }
 function renderPrefs(){
-  const font=state.preferences?.fontSize==='large'?'large':'normal';
+  // 兼容舊版 localStorage 的 normal / large 偏好設定。
+  const fontNames={normal:'一般',large:'大',xlarge:'特大',xxlarge:'超大'};
+  const font=Object.hasOwn(fontNames,state.preferences?.fontSize)?state.preferences.fontSize:'normal';
   document.documentElement.dataset.font=font;
   $('homeAddress').value=state.preferences?.homeAddress||'';
-  const label=font==='large'?'恢復一般字體':'字再大一點';
-  for(const id of ['font-toggle','font-toggle-secondary']){
-    $(id).textContent=label;
-    $(id).setAttribute('aria-pressed',String(font==='large'));
-  }
+  $('font-toggle').textContent=`字體：${fontNames[font]}`;
+  $('font-toggle').setAttribute('aria-label',`目前字體為${fontNames[font]}，點選調整字體大小`);
+  $('font-toggle-secondary').textContent=`選擇字體大小（目前：${fontNames[font]}）`;
+  document.querySelectorAll('[data-font-size]').forEach(button=>{
+    const selected=button.dataset.fontSize===font;
+    button.setAttribute('aria-pressed',String(selected));
+    button.classList.toggle('selected',selected);
+  });
 }
 function render(){renderHome();renderAppointments();renderRides();renderPrefs();}
 function openAppointment(id=''){
@@ -163,7 +168,15 @@ document.addEventListener('click',event=>{
   if(button.dataset.view){setView(button.dataset.view);return;}
   const action=button.dataset.action;
   try{
-    if(action==='font')update(next=>{next.preferences.fontSize=next.preferences.fontSize==='large'?'normal':'large';},'文字大小已更新');
+    if(action==='open-font-dialog')openDialog('font-dialog');
+    else if(action==='set-font'){
+      const value=button.dataset.fontSize;
+      const names={normal:'一般',large:'大',xlarge:'特大',xxlarge:'超大'};
+      if(!Object.hasOwn(names,value))return;
+      update(next=>{next.preferences.fontSize=value;});
+      closeDialog($('font-dialog'));
+      toast(`已切換為${names[value]}字體`,1200);
+    }
     else if(action==='open-appointment')openAppointment();
     else if(action==='edit-appointment')openAppointment(button.dataset.id);
     else if(action==='open-ride')openRide(button.dataset.direction||'outbound',button.dataset.appointmentId||'');
