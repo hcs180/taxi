@@ -43,6 +43,47 @@
       <div class="page-intro small"><span class="eyebrow">個人偏好</span><h1>設定</h1><p>設定常用的住家地址，之後安排用車更方便。</p></div>
       <form id="prefs-form" class="card prefs-card"><label for="homeAddress">我的住家地址</label><input id="homeAddress" name="homeAddress" autocomplete="street-address" maxlength="120" placeholder="例如：苗栗市○○路 12 號"><p class="help-text">僅儲存在目前瀏覽器，沒有上傳至伺服器。</p><button type="submit" class="btn primary full">儲存地址</button></form>
       <section class="card extra-card" aria-labelledby="font-heading"><h2 id="font-heading">文字大小</h2><p>覺得文字不夠清楚嗎？可以切換較大的字。</p><button class="btn secondary full" type="button" data-action="open-font-dialog" id="font-toggle-secondary" aria-haspopup="dialog" aria-controls="font-dialog">選擇字體大小（目前：一般）</button></section>
+      <section class="card role-switch-card" aria-labelledby="role-switch-title">
+        <h2 id="role-switch-title">切換展示介面</h2>
+        <p>同一個瀏覽器可以切換不同角色，查看叫車與看診進度。</p>
+        <div class="role-switch-actions">
+          <button type="button" class="btn secondary full" data-action="switch-role" data-role="driver">切換到司機介面</button>
+          <button type="button" class="btn secondary full" data-action="switch-role" data-role="family">切換到家屬介面</button>
+        </div>
+      </section>
+    </section>
+
+    <section id="page-tracking" class="page trip-page" aria-label="車輛接送資訊" hidden>
+      <button type="button" class="back-link" data-action="back-senior">〈 返回首頁</button>
+      <div class="page-intro small"><span class="eyebrow">乘車資訊</span><h1>您的車輛資訊</h1><p>請核對車牌與車輛顏色，再安心上車。</p></div>
+      <div id="tracking-content" aria-live="polite"></div>
+    </section>
+
+    <section id="page-driver" class="page role-page driver-page" aria-label="司機介面" hidden>
+      <div class="role-heading"><button type="button" class="back-link" data-action="switch-role" data-role="senior">〈 返回長者介面</button><span class="role-tag">司機模式</span></div>
+      <div class="page-intro small"><span class="eyebrow">taxi 司機工作台</span><h1 id="driver-page-title">附近叫車需求</h1><p>在接單前查看區域熱度，接單後優先顯示乘客資訊。</p></div>
+      <section class="card map-card" id="driver-map-card" aria-labelledby="driver-map-title">
+        <div class="section-heading"><h2 id="driver-map-title">Google 地圖</h2><span id="driver-map-caption" class="map-label">苗栗示範區域</span></div>
+        <iframe class="google-map" id="driver-map" title="Google 地圖：司機附近區域" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+        <div class="map-bottom"><a id="driver-map-link" href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer">在 Google 地圖開啟</a><span>地圖顯示需連線</span></div>
+      </section>
+      <section id="driver-active" class="card driver-active" aria-live="polite"></section>
+      <section id="driver-hotspots" class="card" aria-labelledby="driver-hotspot-title">
+        <div class="section-heading"><h2 id="driver-hotspot-title">附近熱度</h2><span class="status-pill">示範資料</span></div>
+        <p class="help-text">每 15 分鐘重新計算展示熱度，不代表真實訂單數。</p>
+        <div class="heat-legend"><span><b class="heat-dot heat-high"></b> 高需求</span><span><b class="heat-dot heat-mid"></b> 中需求</span><span><b class="heat-dot heat-low"></b> 低需求</span></div>
+        <div id="heat-list" class="heat-list"></div>
+        <p id="heat-updated" class="data-update"></p>
+      </section>
+    </section>
+
+    <section id="page-family" class="page role-page family-page" aria-label="家屬介面" hidden>
+      <div class="role-heading"><button type="button" class="back-link" data-action="switch-role" data-role="senior">〈 返回長者介面</button><span class="role-tag">家屬模式</span></div>
+      <div class="page-intro small"><span class="eyebrow">家屬安心查看</span><h1>長者看診進度</h1><p>以簡單進度線查看目前行程，無須閱讀技術資訊。</p></div>
+      <section class="card family-status" id="family-status" aria-live="polite"></section>
+      <section class="card" aria-labelledby="family-timeline-title"><div class="section-heading"><h2 id="family-timeline-title">行程進度</h2><span id="family-last-updated" class="map-label"></span></div><div id="family-timeline" class="timeline"></div></section>
+      <section class="card map-card" aria-labelledby="family-map-title"><div class="section-heading"><h2 id="family-map-title">目前位置</h2><span class="map-label">Google 地圖</span></div><p class="help-text" id="family-location-caption">未取得定位時，僅顯示示範院所位置。</p><iframe id="family-map" class="google-map" title="Google 地圖：長者位置" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe><div class="map-bottom"><a id="family-map-link" target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps">在 Google 地圖開啟</a><span>非即時跨裝置追蹤</span></div></section>
+      <section class="card" aria-labelledby="family-reminder-title"><div class="section-heading"><h2 id="family-reminder-title">關心提醒</h2></div><div id="family-notice"></div><p class="data-update" id="family-refresh-info">每 3 分鐘重新整理畫面資訊</p><button type="button" class="btn secondary full" data-action="refresh-family">立即更新畫面</button></section>
     </section>
 
     <aside class="demo-note" aria-label="展示版說明"><strong>網站展示版</strong>：此網站不會真的叫車或通知醫院。資料只會保留在目前瀏覽器，請勿輸入真實個人資料。</aside>
@@ -72,7 +113,7 @@
     <p class="modal-sub">請依照醫院通知的時間填寫。</p><input type="hidden" id="appointment-id">
     <div class="field-row"><div class="field"><label for="appointment-date">回診日期 <em>必填</em></label><input type="date" id="appointment-date" required></div><div class="field"><label for="appointment-time">看診時間 <em>必填</em></label><input type="time" id="appointment-time" required></div></div>
     <div class="field"><label for="appointment-hospital">醫院或診所名稱 <em>必填</em></label><input id="appointment-hospital" type="text" placeholder="例如：苗栗醫院" maxlength="70" required></div>
-    <details class="optional"><summary>地址與備註（選填）</summary><div class="field"><label for="appointment-address">醫院地址</label><input id="appointment-address" type="text" maxlength="120" placeholder="例如：苗栗市為公路 747 號"></div><div class="field"><label for="appointment-note">備註</label><textarea id="appointment-note" rows="2" maxlength="150" placeholder="例如：攜帶健保卡"></textarea></div></details>
+    <div class="field"><label for="appointment-address">醫院地址（可自行輸入）</label><input id="appointment-address" type="text" maxlength="120" placeholder="自行輸入或從附近醫院選擇"><button type="button" class="quick-select" data-action="open-hospitals" data-target="appointment">選擇附近醫院</button></div><details class="optional"><summary>備註（選填）</summary><div class="field"><label for="appointment-note">備註</label><textarea id="appointment-note" rows="2" maxlength="150" placeholder="例如：攜帶健保卡"></textarea></div></details>
     <p class="form-error" id="appointment-error" role="alert" hidden></p>
     <button class="btn primary full submit-btn" type="submit">儲存回診</button><button type="button" class="btn ghost full" data-action="close-dialog">先不儲存</button>
   </form>
@@ -83,7 +124,7 @@
     <div class="modal-head"><h2 id="ride-modal-title">安排用車</h2><button type="button" class="close-button" data-action="close-dialog" aria-label="關閉用車視窗">關閉</button></div>
     <p class="modal-sub">確認上下車地點與時間。此操作不會真的叫車。</p>
     <div class="direction-picker" role="group" aria-label="搭車方向"><button type="button" id="outbound-button" class="direction-choice active" data-action="change-direction" data-direction="outbound" aria-pressed="true">去醫院</button><button type="button" id="return-button" class="direction-choice" data-action="change-direction" data-direction="return" aria-pressed="false">回家</button></div>
-    <input type="hidden" id="ride-appointment-id"><div class="field"><label for="ride-pickup">從哪裡上車？ <em>必填</em></label><input id="ride-pickup" type="text" maxlength="120" required placeholder="請輸入上車地點"></div><div class="field"><label for="ride-destination">要去哪裡？ <em>必填</em></label><input id="ride-destination" type="text" maxlength="120" required placeholder="請輸入目的地"></div>
+    <input type="hidden" id="ride-appointment-id"><div class="field"><label for="ride-pickup">從哪裡上車？ <em>必填</em></label><input id="ride-pickup" type="text" maxlength="120" required placeholder="請輸入上車地點"><button type="button" class="quick-select" id="ride-pickup-hospitals" data-action="open-hospitals" data-target="ride-pickup" hidden>選擇附近醫院</button></div><div class="field"><label for="ride-destination">要去哪裡？ <em>必填</em></label><input id="ride-destination" type="text" maxlength="120" required placeholder="請輸入目的地"><button type="button" class="quick-select" id="ride-destination-hospitals" data-action="open-hospitals" data-target="ride-destination">選擇附近醫院</button></div>
     <div class="field-row"><div class="field"><label for="ride-date">搭車日期 <em>必填</em></label><input type="date" id="ride-date" required></div><div class="field"><label for="ride-time">搭車時間 <em>必填</em></label><input type="time" id="ride-time" required></div></div>
     <p class="form-error" id="ride-error" role="alert" hidden></p>
     <button class="btn primary full submit-btn" type="submit">儲存用車規劃</button><button type="button" class="btn ghost full" data-action="close-dialog">先不安排</button>
@@ -93,6 +134,15 @@
 <dialog class="modal confirm-modal" id="confirm-dialog" aria-labelledby="confirm-title">
   <div class="modal-head"><h2 id="confirm-title">確定要取消嗎？</h2><button type="button" class="close-button" data-action="close-dialog" aria-label="關閉確認視窗">關閉</button></div><p id="confirm-message"></p>
   <div class="confirm-actions"><button type="button" class="btn secondary" data-action="close-dialog">保留</button><button type="button" class="btn danger" id="confirm-yes">確認取消</button></div>
+</dialog>
+<dialog class="modal hospital-modal" id="hospital-dialog" aria-labelledby="hospital-dialog-title">
+  <div class="modal-head"><h2 id="hospital-dialog-title">選擇附近醫院</h2><button type="button" class="close-button" data-action="close-dialog">關閉</button></div>
+  <p class="modal-sub">點選醫院即可帶入名稱與地址；也可以不選，返回後直接輸入。</p>
+  <button type="button" class="btn secondary full" data-action="find-nearby">使用目前位置尋找附近醫院</button>
+  <p class="help-text" id="hospital-status">以下為苗栗地區的常用院所範例，並非依距離排序。</p>
+  <div class="field hospital-search"><label for="hospital-query">搜尋醫院名稱</label><input id="hospital-query" type="search" placeholder="輸入醫院名稱或地址" autocomplete="off"></div>
+  <div id="hospital-options" class="hospital-options" role="list"></div>
+  <button type="button" class="btn ghost full" data-action="close-dialog">我想自行輸入</button>
 </dialog>
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 </body>

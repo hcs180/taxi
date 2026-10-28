@@ -42,3 +42,98 @@ main{width:min(100%,760px);margin:0 auto}.page{padding:42px 0 8px}.page-intro{ma
 
 .font-modal .modal-head h2{font-size:clamp(27px,1.16rem,38px);min-width:0}
 .font-modal .close-button{white-space:nowrap;flex:0 0 auto}
+
+/* v3 三角色展示：長者介面沿用 v2 字體，司機與家屬分別採 20/26/32pt。 */
+:root[data-role="driver"],:root[data-role="family"]{font-size:20pt}
+:root[data-role="driver"][data-role-font="medium"],:root[data-role="family"][data-role-font="medium"]{font-size:26pt}
+:root[data-role="driver"][data-role-font="large"],:root[data-role="family"][data-role-font="large"]{font-size:32pt}
+:root[data-role="driver"] main,:root[data-role="family"] main{width:min(100%,1000px)}
+:root[data-view="tracking"] .bottom-nav,.other-role .bottom-nav{display:none!important}
+:root[data-role="driver"] .page,:root[data-role="family"] .page{padding-bottom:90px}
+.role-switch-card{margin-top:27px}
+.role-switch-card p{color:#61756a;font-size:.84rem;margin:10px 0 20px}
+.role-switch-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.quick-select{display:block;width:100%;margin:10px 0 0;border-radius:13px;min-height:55px;border:2px solid #a3cab1;background:#eaf6ee;color:#1a6547;font-weight:820;font-size:.83rem}
+.hospital-search{margin:20px 0 12px}
+.hospital-options{display:grid;gap:10px;max-height:36vh;overflow:auto;padding:4px 3px 12px}
+.hospital-choice{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:5px;border-radius:14px;border:1.5px solid #ccded1;background:#f7faf7;padding:15px 17px;color:#1b4434;min-height:75px;font-size:.8rem}
+.hospital-choice strong{font-size:1.08em;font-weight:850}
+.hospital-choice span,.hospital-choice small{font-size:.87em;color:#62756a;overflow-wrap:anywhere}
+.hospital-choice:hover{border-color:#26794f;background:#eaf5ed}
+.back-link{border:0;background:none;color:#22644c;font-size:.83rem;font-weight:850;min-height:54px;padding:10px 2px;margin-bottom:12px;text-align:left}
+.trip-page .page-intro{margin-bottom:16px}
+.vehicle-hero{background:linear-gradient(150deg,#124c3c,#247858);border-radius:25px;color:white;padding:32px 34px 28px;box-shadow:0 15px 36px rgba(20,73,49,.14)}
+.hero-chip{display:inline-block;background:#ffffff25;border:1px solid #ffffff58;padding:7px 11px;border-radius:60px;font-size:.67rem;letter-spacing:.015em}
+.hero-label{font-size:.87rem;color:#e1f1e8;margin-top:19px}
+.vehicle-plate{font-size:clamp(40px,2.65rem,88px);font-weight:920;letter-spacing:.02em;line-height:1.15;margin:8px 0 20px;overflow-wrap:anywhere}
+.vehicle-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.vehicle-grid>div{background:#ffffff1d;border:1px solid #ffffff45;border-radius:15px;padding:18px 20px;display:flex;flex-direction:column;gap:4px}
+.vehicle-grid span{font-size:.74rem;color:#def1e5}.vehicle-grid strong{font-size:1.36rem;line-height:1.35}
+.vehicle-stage{margin-top:15px;font-weight:770;color:#e4f6e8;font-size:.79rem}
+.tracking-actions{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin:20px 0 12px}.tracking-actions button:first-child{grid-column:1 / -1}
+.tracking-actions .btn{min-height:65px}.trip-details .section-heading{flex-wrap:wrap}
+.role-heading{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:14px;flex-wrap:wrap}
+.role-heading .back-link{margin:0}
+.role-tag{border-radius:100px;background:#e4f2e8;color:#185a3f;padding:8px 15px;font-size:.69rem;font-weight:800}
+.role-page .page-intro h1{font-size:clamp(35px,1.7rem,70px)}
+.role-page .page-intro p{font-size:.7rem}
+.role-page .card{padding:22px 26px}
+.role-page .section-heading h2{font-size:clamp(26px,1rem,43px)}
+.role-page .record-meta,.role-page .map-label{font-size:.59rem;color:#64786e}
+.role-page .map-label{text-align:right}
+.google-map{border:0;display:block;width:100%;height:345px;background:#edf2eb;border-radius:15px}
+.driver-has-order .google-map{height:168px}
+.driver-has-order #driver-hotspots{display:none}
+.driver-has-order #driver-map-card{margin-bottom:12px}
+.map-bottom{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px;font-size:.6rem;color:#63756a}
+.map-bottom a{color:#176348;font-weight:800}
+.heat-legend{display:flex;flex-wrap:wrap;gap:16px;font-size:.63rem;color:#5d7263;margin:17px 0 15px}
+.heat-legend span{display:inline-flex;align-items:center;gap:8px}
+.heat-dot{display:inline-block;width:14px;height:14px;border-radius:50%;flex-shrink:0}
+.heat-high{background:#e56b53;box-shadow:0 0 0 5px #e56b531f}.heat-mid{background:#d6a242;box-shadow:0 0 0 5px #d6a24224}.heat-low{background:#4b9e82;box-shadow:0 0 0 5px #4b9e8225}
+.heat-list{display:grid;gap:9px}.heat-item{display:flex;align-items:center;gap:15px;border:1.5px solid #e1eae0;background:white;padding:14px 15px;border-radius:12px;text-align:left;color:#234837;font-size:.7rem;min-height:61px}
+.heat-item.active{border-color:#2e8660;background:#eff8f1}.heat-name{flex:1;font-weight:760}.heat-item strong{font-weight:920}
+.data-update{color:#697d70;font-size:.66rem;margin-top:12px;overflow-wrap:anywhere}
+.driver-passenger{display:flex;align-items:center;gap:14px;border-radius:16px;padding:17px;background:#f3f8f3;margin:5px 0 18px}
+.person-icon{height:60px;width:60px;flex:0 0 60px;border-radius:50%;background:#dceee0;display:grid;place-items:center;color:#255b42;font-weight:850;font-size:1.05rem}
+.driver-passenger h3{font-size:.83rem}.driver-passenger p{font-size:.62rem;color:#5d7266}
+.driver-route{background:#f7faf6;border:1px solid #e0ebe2;border-radius:16px;padding:19px}
+.driver-route strong{display:block;color:#64766a;font-size:.61rem}.driver-route p{font-size:.82rem;font-weight:820;margin:3px 0 16px;overflow-wrap:anywhere}.driver-route p:last-child{margin-bottom:0}
+.driver-note{background:#fff6e7;border:1px solid #f0dab1;color:#5d4a2a;border-radius:15px;padding:18px;margin:15px 0}.driver-note strong{display:block;font-size:.72rem}.driver-note p{margin-top:8px;font-size:.73rem;overflow-wrap:anywhere}
+.driver-active .btn{margin-top:20px;min-height:66px}
+.family-main-stage{font-size:clamp(29px,1.5rem,63px);font-weight:900;color:#185d43;line-height:1.35;margin:10px 0 16px}
+.timeline{position:relative;display:grid;gap:0;margin:5px 0 10px}
+.timeline-item{display:flex;align-items:flex-start;gap:17px;position:relative;padding:8px 0 22px;color:#87958a;font-size:.79rem}
+.timeline-item:before{content:"";position:absolute;left:20px;top:43px;height:calc(100% - 30px);border-left:3px solid #d8e0d8}
+.timeline-item:last-child:before{display:none}
+.timeline-item.done{color:#185e45}.timeline-item.current strong{font-weight:920}
+.timeline-point{width:43px;height:43px;flex:0 0 43px;border-radius:50%;background:#ecf0ed;border:2px solid #d0ded2;display:grid;place-items:center;color:#748377;font-weight:900;font-size:.7rem;position:relative;z-index:1}
+.timeline-item.done .timeline-point{background:#216b4e;border-color:#216b4e;color:white}
+.timeline-item>div{padding-top:7px;min-width:0;overflow-wrap:anywhere}
+.current-label{display:block;font-size:.63rem;color:#518b6c;margin-top:4px}
+.notice-text{padding:20px 21px;background:#eef6ee;border-left:5px solid #2d9462;border-radius:11px;font-weight:740;font-size:.81rem}
+.progress-prompt{margin-top:16px;padding:14px;background:#f0f7f0;border-radius:15px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;color:#24593f;font-size:.8rem}
+.progress-prompt button{min-height:55px}
+:root[data-role="driver"] .font-button,:root[data-role="family"] .font-button{font-size:clamp(16px,.58rem,26px);white-space:normal}
+:root[data-role="driver"] .brand,:root[data-role="family"] .brand{font-size:clamp(24px,.85rem,39px)}
+:root[data-role="driver"] .btn,:root[data-role="family"] .btn{font-size:clamp(21px,.67rem,33px)}
+:root[data-role="driver"] .role-page .help-text,:root[data-role="family"] .role-page .help-text{font-size:.64rem;color:#64776a}
+:root[data-role="driver"][data-role-font="large"] .section-heading,:root[data-role="family"][data-role-font="large"] .section-heading{flex-wrap:wrap}
+@media(max-width:640px){
+ .role-switch-actions,.tracking-actions{grid-template-columns:1fr}
+ .tracking-actions button:first-child{grid-column:auto}
+ .vehicle-hero{padding:25px 22px 24px}
+ .vehicle-grid{grid-template-columns:1fr 1fr}
+ .vehicle-grid>div{padding:14px 13px}
+ .role-page .card{padding:19px 17px}
+ .role-page .map-label{text-align:left}
+ .role-page .section-heading{flex-wrap:wrap}
+ .role-page .page-intro h1{font-size:clamp(31px,1.35rem,52px)}
+ .role-page .page-intro p{font-size:.66rem}
+ .google-map{height:300px}
+ .driver-has-order .google-map{height:145px}
+ :root[data-role="driver"][data-role-font="large"] .google-map,:root[data-role="family"][data-role-font="large"] .google-map{height:245px}
+ :root[data-role="driver"][data-role-font="large"] .driver-has-order .google-map{height:135px}
+ :root[data-role="driver"][data-role-font="large"] .role-page .section-heading h2,:root[data-role="family"][data-role-font="large"] .role-page .section-heading h2{font-size:clamp(26px,.9rem,39px)}
+}
+@media(max-width:390px){.vehicle-grid{grid-template-columns:1fr}.vehicle-plate{font-size:clamp(38px,1.65rem,62px)}.hospital-modal{max-height:95dvh}}
