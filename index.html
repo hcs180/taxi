@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#164b40">
-  <meta name="description" content="taxi 長者安心乘車，簡單安排回診與接送規劃的操作展示網站。">
+  <meta name="description" content="taxi Care+：長者回診接送，一次預約、準時出門、安心回家。">
   <title>taxi｜長者安心乘車</title>
   <link rel="stylesheet" href="./assets/style.css">
   <link rel="stylesheet" href="./assets/careplus.css">
@@ -12,6 +12,19 @@
   <script src="./assets/careplus.js" defer></script>
 </head>
 <body>
+<svg class="sprite" aria-hidden="true" focusable="false"><defs>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 4.5v15M4.5 12h15"/></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M2.6 11.2 12 3.2l9.4 8"/><path d="M5 9.4v11.4h14V9.4"/><path d="M9.6 20.8v-6h4.8v6"/></symbol>
+<symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.8" y="5.2" width="16.4" height="15" rx="2.4"/><path d="M3.8 9.8h16.4M8.3 3.2v4M15.7 3.2v4"/></symbol>
+<symbol id="i-list" viewBox="0 0 24 24"><rect x="4" y="3.6" width="16" height="16.8" rx="2.4"/><path d="M8 8.6h8M8 12h8M8 15.4h5"/></symbol>
+<symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.1"/><path d="M19.3 14.6a1.5 1.5 0 0 0 .3 1.7l.1.1a1.9 1.9 0 1 1-2.7 2.7l-.1-.1a1.5 1.5 0 0 0-1.7-.3 1.5 1.5 0 0 0-.9 1.4v.2a1.9 1.9 0 1 1-3.8 0v-.1a1.5 1.5 0 0 0-1-1.4 1.5 1.5 0 0 0-1.7.3l-.1.1a1.9 1.9 0 1 1-2.7-2.7l.1-.1a1.5 1.5 0 0 0 .3-1.7 1.5 1.5 0 0 0-1.4-.9h-.2a1.9 1.9 0 1 1 0-3.8h.1a1.5 1.5 0 0 0 1.4-1 1.5 1.5 0 0 0-.3-1.7l-.1-.1a1.9 1.9 0 1 1 2.7-2.7l.1.1a1.5 1.5 0 0 0 1.7.3h.1a1.5 1.5 0 0 0 .9-1.4v-.2a1.9 1.9 0 1 1 3.8 0v.1a1.5 1.5 0 0 0 .9 1.4 1.5 1.5 0 0 0 1.7-.3l.1-.1a1.9 1.9 0 1 1 2.7 2.7l-.1.1a1.5 1.5 0 0 0-.3 1.7v.1a1.5 1.5 0 0 0 1.4.9h.2a1.9 1.9 0 1 1 0 3.8h-.1a1.5 1.5 0 0 0-1.4.9z"/></symbol>
+<symbol id="i-right" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+<symbol id="i-left" viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4.5v15M6.5 14l5.5 5.5 5.5-5.5"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8.3" r="3.8"/><path d="M4.8 20c.9-3.7 3.7-5.6 7.2-5.6s6.3 1.9 7.2 5.6"/></symbol>
+<symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3.2" width="6" height="11" rx="3"/><path d="M5.8 11.3a6.2 6.2 0 0 0 12.4 0M12 17.5v3.3"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+</defs></svg>
 <a class="skip" href="#main">跳至主要內容</a>
 <div class="app-shell">
   <header class="topbar">
@@ -23,8 +36,8 @@
     <section id="page-home" class="page" aria-label="首頁">
       <div class="page-intro"><span class="eyebrow">安心出門，簡單回家</span><h1>您要去哪裡？</h1><p>選擇要去的地方，我們一起把搭車資訊準備好。</p></div>
       <div class="main-actions">
-        <button type="button" class="destination primary" data-action="open-ride" data-direction="outbound"><span class="destination-icon" aria-hidden="true">✚</span><span>我要去醫院<small>前往回診、看診</small></span><span class="arrow" aria-hidden="true">›</span></button>
-        <button type="button" class="destination secondary" data-action="open-ride" data-direction="return"><span class="destination-icon" aria-hidden="true">⌂</span><span>我要回家<small>安排回程交通</small></span><span class="arrow" aria-hidden="true">›</span></button>
+        <button type="button" class="destination primary" data-action="open-ride" data-direction="outbound"><span class="destination-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></span><span>我要去醫院<small>前往回診、看診</small></span><span class="arrow" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="#i-right"/></svg></span></button>
+        <button type="button" class="destination secondary" data-action="open-ride" data-direction="return"><span class="destination-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg></span><span>我要回家<small>安排回程交通</small></span><span class="arrow" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="#i-right"/></svg></span></button>
       </div>
       <section class="card cp-card" id="cp-home" aria-live="polite"></section>
       <section class="card" aria-labelledby="next-heading"><div class="section-heading"><h2 id="next-heading">下一次回診</h2><button type="button" class="small-link" data-view="appointments">全部回診</button></div><div id="home-next" aria-live="polite"></div></section>
@@ -44,44 +57,41 @@
 
     <section id="page-help" class="page" aria-label="設定" hidden>
       <div class="page-intro small"><span class="eyebrow">個人偏好</span><h1>設定</h1><p>設定常用的住家地址，之後安排用車更方便。</p></div>
-      <form id="prefs-form" class="card prefs-card"><label for="homeAddress">我的住家地址</label><input id="homeAddress" name="homeAddress" autocomplete="street-address" maxlength="120" placeholder="例如：苗栗市○○路 12 號"><p class="help-text">僅儲存在目前瀏覽器，沒有上傳至伺服器。</p><button type="submit" class="btn primary full">儲存地址</button></form>
+      <form id="prefs-form" class="card prefs-card"><label for="homeAddress">我的住家地址</label><input id="homeAddress" name="homeAddress" autocomplete="street-address" maxlength="120" placeholder="例如：苗栗市○○路 12 號"><button type="submit" class="btn primary full">儲存地址</button></form>
       <section class="card extra-card" aria-labelledby="font-heading"><h2 id="font-heading">文字大小</h2><p>覺得文字不夠清楚嗎？可以切換較大的字。</p><button class="btn secondary full" type="button" data-action="open-font-dialog" id="font-toggle-secondary" aria-haspopup="dialog" aria-controls="font-dialog">選擇字體大小（目前：一般）</button></section>
       <section class="card role-switch-card" aria-labelledby="role-switch-title">
-        <h2 id="role-switch-title">切換展示介面</h2>
-        <p>同一個瀏覽器可以切換不同角色，查看叫車與看診進度。</p>
-        <div class="role-switch-actions">
-          <button type="button" class="btn secondary full" data-action="switch-role" data-role="driver">切換到司機介面</button>
-          <button type="button" class="btn secondary full" data-action="switch-role" data-role="family">切換到家屬介面</button>
-        </div>
+        <h2 id="role-switch-title">切換身分</h2>
+        <p>家屬可查看長輩的看診與接送進度，司機可查看待命區與接送任務。</p>
+        <div class="role-tabs" role="group" aria-label="切換身分"><button type="button" data-action="switch-role" data-role="senior" aria-pressed="true" class="on">長者</button><button type="button" data-action="switch-role" data-role="family" aria-pressed="false" class="">家屬</button><button type="button" data-action="switch-role" data-role="driver" aria-pressed="false" class="">司機</button></div>
       </section>
     </section>
 
     <section id="page-tracking" class="page trip-page" aria-label="車輛接送資訊" hidden>
-      <button type="button" class="back-link" data-action="back-senior">〈 返回首頁</button>
+      <button type="button" class="back-link" data-action="back-senior"><svg class="ic" aria-hidden="true"><use href="#i-left"/></svg>返回首頁</button>
       <div class="page-intro small"><span class="eyebrow">乘車資訊</span><h1>您的車輛資訊</h1><p>請核對車牌與車輛顏色，再安心上車。</p></div>
       <div id="tracking-content" aria-live="polite"></div>
     </section>
 
     <section id="page-visit" class="page cp-visit" aria-label="看診當天" hidden>
-      <button type="button" class="back-link" data-action="back-senior">〈 返回首頁</button>
+      <button type="button" class="back-link" data-action="back-senior"><svg class="ic" aria-hidden="true"><use href="#i-left"/></svg>返回首頁</button>
       <div class="page-intro small"><span class="eyebrow">Care+ 看診當天</span><h1>看診進度與回程</h1><p>依醫院公開的看診進度，自動調整出門與回程時間。</p></div>
       <div id="cp-visit" aria-live="polite"></div>
-      <details class="cp-demo" open><summary>展示控制（錄影用）</summary><div id="cp-demo-controls" class="cp-demo-grid"></div></details>
+      <details class="cp-demo" id="cp-demo" open hidden><summary>情境控制</summary><div id="cp-demo-controls" class="cp-demo-grid"></div></details>
     </section>
 
     <section id="page-driver" class="page role-page driver-page" aria-label="司機介面" hidden>
-      <div class="role-heading"><button type="button" class="back-link" data-action="switch-role" data-role="senior">〈 返回長者介面</button><span class="role-tag">司機模式</span></div>
-      <div class="page-intro small"><span class="eyebrow">taxi 司機工作台</span><h1 id="driver-page-title">附近叫車需求</h1><p>在接單前查看區域熱度，接單後優先顯示乘客資訊。</p></div>
+      <div class="role-heading"><div class="role-tabs" role="group" aria-label="切換身分"><button type="button" data-action="switch-role" data-role="senior" aria-pressed="false" class="">長者</button><button type="button" data-action="switch-role" data-role="family" aria-pressed="false" class="">家屬</button><button type="button" data-action="switch-role" data-role="driver" aria-pressed="true" class="on">司機</button></div></div>
+      <div class="page-intro small"><span class="eyebrow">taxi 司機工作台</span><h1 id="driver-page-title">附近叫車需求</h1><p>查看醫院待命區與附近需求，接單後優先顯示乘客資訊。</p></div>
       <section id="driver-pool" class="card cp-pool" aria-live="polite"></section>
       <section class="card map-card" id="driver-map-card" aria-labelledby="driver-map-title">
-        <div class="section-heading"><h2 id="driver-map-title">Google 地圖</h2><span id="driver-map-caption" class="map-label">苗栗示範區域</span></div>
+        <div class="section-heading"><h2 id="driver-map-title">Google 地圖</h2><span id="driver-map-caption" class="map-label">苗栗地區</span></div>
         <iframe class="google-map" id="driver-map" title="Google 地圖：司機附近區域" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
-        <div class="map-bottom"><a id="driver-map-link" href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer">在 Google 地圖開啟</a><span>地圖顯示需連線</span></div>
+        <div class="map-bottom"><a id="driver-map-link" href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer">在 Google 地圖開啟</a></div>
       </section>
       <section id="driver-active" class="card driver-active" aria-live="polite"></section>
       <section id="driver-hotspots" class="card" aria-labelledby="driver-hotspot-title">
-        <div class="section-heading"><h2 id="driver-hotspot-title">附近熱度</h2><span class="status-pill">示範資料</span></div>
-        <p class="help-text">每 15 分鐘重新計算展示熱度，不代表真實訂單數。</p>
+        <div class="section-heading"><h2 id="driver-hotspot-title">附近熱度</h2></div>
+        <p class="help-text">依附近叫車需求，每 15 分鐘更新。</p>
         <div class="heat-legend"><span><b class="heat-dot heat-high"></b> 高需求</span><span><b class="heat-dot heat-mid"></b> 中需求</span><span><b class="heat-dot heat-low"></b> 低需求</span></div>
         <div id="heat-list" class="heat-list"></div>
         <p id="heat-updated" class="data-update"></p>
@@ -89,20 +99,19 @@
     </section>
 
     <section id="page-family" class="page role-page family-page" aria-label="家屬介面" hidden>
-      <div class="role-heading"><button type="button" class="back-link" data-action="switch-role" data-role="senior">〈 返回長者介面</button><span class="role-tag">家屬模式</span></div>
-      <div class="page-intro small"><span class="eyebrow">家屬安心查看</span><h1>長者看診進度</h1><p>以簡單進度線查看目前行程，無須閱讀技術資訊。</p></div>
+      <div class="role-heading"><div class="role-tabs" role="group" aria-label="切換身分"><button type="button" data-action="switch-role" data-role="senior" aria-pressed="false" class="">長者</button><button type="button" data-action="switch-role" data-role="family" aria-pressed="true" class="on">家屬</button><button type="button" data-action="switch-role" data-role="driver" aria-pressed="false" class="">司機</button></div></div>
+      <div class="page-intro small"><span class="eyebrow">家屬安心查看</span><h1>長者看診進度</h1><p>隨時掌握長輩的看診與接送進度。</p></div>
       <section class="card family-status" id="family-status" aria-live="polite"></section>
       <section class="card" aria-labelledby="family-timeline-title"><div class="section-heading"><h2 id="family-timeline-title">行程進度</h2><span id="family-last-updated" class="map-label"></span></div><div id="family-timeline" class="timeline"></div></section>
-      <section class="card map-card" aria-labelledby="family-map-title"><div class="section-heading"><h2 id="family-map-title">目前位置</h2><span class="map-label">Google 地圖</span></div><p class="help-text" id="family-location-caption">未取得定位時，僅顯示示範院所位置。</p><iframe id="family-map" class="google-map" title="Google 地圖：長者位置" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe><div class="map-bottom"><a id="family-map-link" target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps">在 Google 地圖開啟</a><span>非即時跨裝置追蹤</span></div></section>
+      <section class="card map-card" aria-labelledby="family-map-title"><div class="section-heading"><h2 id="family-map-title">目前位置</h2><span class="map-label">Google 地圖</span></div><p class="help-text" id="family-location-caption"></p><iframe id="family-map" class="google-map" title="Google 地圖：長者位置" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe><div class="map-bottom"><a id="family-map-link" target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps">在 Google 地圖開啟</a></div></section>
       <section class="card" aria-labelledby="family-reminder-title"><div class="section-heading"><h2 id="family-reminder-title">關心提醒</h2></div><div id="family-notice"></div><p class="data-update" id="family-refresh-info">每 3 分鐘重新整理畫面資訊</p><button type="button" class="btn secondary full" data-action="refresh-family">立即更新畫面</button></section>
     </section>
-
   </main>
   <nav class="bottom-nav" aria-label="主要選單">
-    <button type="button" class="is-current" data-view="home" aria-current="page"><span class="nav-icon" aria-hidden="true">⌂</span><span>首頁</span></button>
-    <button type="button" data-view="appointments"><span class="nav-icon" aria-hidden="true">▣</span><span>回診</span></button>
-    <button type="button" data-view="rides"><span class="nav-icon" aria-hidden="true">▤</span><span>紀錄</span></button>
-    <button type="button" data-view="help"><span class="nav-icon" aria-hidden="true">⚙</span><span>設定</span></button>
+    <button type="button" class="is-current" data-view="home" aria-current="page"><span class="nav-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg></span><span>首頁</span></button>
+    <button type="button" data-view="appointments"><span class="nav-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="#i-calendar"/></svg></span><span>回診</span></button>
+    <button type="button" data-view="rides"><span class="nav-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="#i-list"/></svg></span><span>紀錄</span></button>
+    <button type="button" data-view="help"><span class="nav-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="#i-gear"/></svg></span><span>設定</span></button>
   </nav>
 </div>
 
@@ -132,7 +141,7 @@
 <dialog class="modal" id="ride-dialog" aria-labelledby="ride-modal-title">
   <form id="ride-form" novalidate>
     <div class="modal-head"><h2 id="ride-modal-title">安排用車</h2><button type="button" class="close-button" data-action="close-dialog" aria-label="關閉用車視窗">關閉</button></div>
-    <p class="modal-sub">確認上下車地點與時間。此操作不會真的叫車。</p>
+    <p class="modal-sub">確認上下車地點與時間。</p>
     <div class="direction-picker" role="group" aria-label="搭車方向"><button type="button" id="outbound-button" class="direction-choice active" data-action="change-direction" data-direction="outbound" aria-pressed="true">去醫院</button><button type="button" id="return-button" class="direction-choice" data-action="change-direction" data-direction="return" aria-pressed="false">回家</button></div>
     <input type="hidden" id="ride-appointment-id"><div class="field"><label for="ride-pickup">從哪裡上車？ <em>必填</em></label><input id="ride-pickup" type="text" maxlength="120" required placeholder="請輸入上車地點"><button type="button" class="quick-select" id="ride-pickup-hospitals" data-action="open-hospitals" data-target="ride-pickup" hidden>選擇附近醫院</button></div><div class="field"><label for="ride-destination">要去哪裡？ <em>必填</em></label><input id="ride-destination" type="text" maxlength="120" required placeholder="請輸入目的地"><button type="button" class="quick-select" id="ride-destination-hospitals" data-action="open-hospitals" data-target="ride-destination">選擇附近醫院</button></div>
     <div class="field-row"><div class="field"><label for="ride-date">搭車日期 <em>必填</em></label><input type="date" id="ride-date" required></div><div class="field"><label for="ride-time">搭車時間 <em>必填</em></label><input type="time" id="ride-time" required></div></div>
@@ -149,7 +158,7 @@
   <div class="modal-head"><h2 id="hospital-dialog-title">選擇附近醫院</h2><button type="button" class="close-button" data-action="close-dialog">關閉</button></div>
   <p class="modal-sub">點選醫院即可帶入名稱與地址；也可以不選，返回後直接輸入。</p>
   <button type="button" class="btn secondary full" data-action="find-nearby">使用目前位置尋找附近醫院</button>
-  <p class="help-text" id="hospital-status">以下為苗栗地區的常用院所範例，並非依距離排序。</p>
+  <p class="help-text" id="hospital-status">苗栗地區常用院所</p>
   <div class="field hospital-search"><label for="hospital-query">搜尋醫院名稱</label><input id="hospital-query" type="search" placeholder="輸入醫院名稱或地址" autocomplete="off"></div>
   <div id="hospital-options" class="hospital-options" role="list"></div>
   <button type="button" class="btn ghost full" data-action="close-dialog">我想自行輸入</button>
@@ -158,7 +167,7 @@
   <form id="cp-longterm-form" novalidate>
     <div class="modal-head"><h2 id="cp-lt-title">長期預約</h2><button type="button" class="close-button" data-action="close-dialog" aria-label="關閉長期預約視窗">關閉</button></div>
     <p class="modal-sub">一次排好一段時間的回診接送。日期由您決定，每次出門時間由 AI 推薦。</p>
-    <button type="button" class="btn secondary full cp-mic-btn" data-cpa="voice-booking">🎤 用說的設定</button>
+    <button type="button" class="btn secondary full cp-mic-btn" data-cpa="voice-booking"><svg class="ic ic-inline" aria-hidden="true"><use href="#i-mic"/></svg>用說的設定</button>
     <p id="cp-voice-text" class="cp-voice-text" hidden></p>
     <div class="field"><label for="cp-hospital">醫院與科別</label><select id="cp-hospital" class="cp-select"></select></div>
     <fieldset class="cp-days"><legend>每週哪幾天回診</legend><div id="cp-day-row" class="cp-day-row"></div></fieldset>

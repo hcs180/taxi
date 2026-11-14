@@ -1,6 +1,4 @@
 'use strict';
-// Care+ 決賽展示流程：長期預約、語音輸入、無障礙車輛、看診進度、延誤平移、快輪到推播、一鍵叫回程、司機任務池與轉單。
-// 全部為展示資料，存在目前瀏覽器；看診燈號為模擬，實際上線預計串接醫院 App／網站公開的看診進度。
 
 const CP_HOSPITALS = [
   {id:'ntuh', name:'台大醫院', dept:'腎臟內科 3 診', address:'台北市中正區常德街 1 號', zone:'台大醫院待命區'},
@@ -13,7 +11,8 @@ const CP_TEXT = {
   id:{pushOpd:(c,m)=>`Sebentar lagi giliran Nenek Chen (sekarang nomor ${c}, Nenek nomor ${m}). Pesan taksi pulang?`, pushTreat:'Cuci darah tinggal 15 menit lagi. Pesan taksi pulang?', reserve:'Pesan taksi pulang', later:'Nanti', oneTap:'Sudah selesai, panggil taksi', speak:'Bicara untuk memanggil taksi', listening:'Mendengarkan… ucapkan “sudah selesai”', fallback:'Sudah selesai, mau pulang', lang:'Bahasa Indonesia'}
 };
 
-const CP_SIMVOICE = new URLSearchParams(location.search).has('simvoice'); // 錄影時可加 ?simvoice 改用模擬語音
+const CP_PARAMS = new URLSearchParams(location.search);
+const CP_SIMVOICE = CP_PARAMS.has('simvoice');
 const cpMin = t => { const [h,m] = String(t).split(':').map(Number); return h*60+m; };
 const cpFmt = m => { m = ((Math.round(m)%1440)+1440)%1440; return `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`; };
 const cpRound5 = m => Math.round(m/5)*5;
@@ -29,8 +28,7 @@ function cpDefaultVisit(){
 function cp(){ return state.careplus || {series:null, visit:cpDefaultVisit()}; }
 function cpSave(fn,message){ update(next=>{ next.careplus = next.careplus || {series:null, visit:cpDefaultVisit()}; fn(next.careplus); }, message); }
 
-// ---------- 計算 ----------
-function cpTravel(date){ // 展示用規則：週一早上車多 +10 分；預報下雨的日子 +5 分
+function cpTravel(date){
   const wd = cpWeekday(date); let t = 20, why = '路況一般';
   if(wd===1){ t += 10; why = '週一早上車多'; }
   if(date.endsWith('9') || date.endsWith('4')){ t += 5; why += '、預報下雨'; }
@@ -48,12 +46,11 @@ function cpVisitCalc(v){
   }
   const ahead = Math.max(0, v.mine - v.current);
   const turn = v.now + ahead*v.avg;
-  const end = v.endFixed ?? cpRound5(turn + 30); // 看診約 10 分鐘＋批價領藥約 20 分鐘
-  const leave = turn - 10 - 20;     // 提早 10 分鐘到、車程約 20 分鐘
+  const end = v.endFixed ?? cpRound5(turn + 30);
+  const leave = turn - 10 - 20;
   return {ahead, turn, end, leave, wait:ahead*v.avg};
 }
 
-// ---------- 首頁卡片 ----------
 function cpRenderHome(){
   const box = $('cp-home'); if(!box) return;
   const s = cp().series;
@@ -75,7 +72,6 @@ function cpRenderHome(){
     <div class="cp-actions"><button type="button" class="btn primary" data-cpa="open-visit">看診當天進度</button><button type="button" class="btn secondary" data-cpa="open-longterm">修改長期預約</button></div>`;
 }
 
-// ---------- 長期預約 ----------
 let cpDaysSel = [1,3,5];
 function cpOpenLongterm(){
   const s = cp().series;
@@ -103,7 +99,7 @@ function cpRenderPreview(){
   const dates = cpSeriesDates(s);
   const rows = dates.slice(0,3).map(d=>{ const tr = cpTravel(d); return `<li><span>${cpShort(d)}</span><b>${cpFmt(cpMin(s.time)-15-tr.t)} 出門</b><small>${esc(tr.why)}・車程約 ${tr.t} 分</small></li>`; }).join('');
   box.innerHTML = `<div class="cp-preview-head"><strong>共 ${dates.length} 次回診、${dates.length*2} 趟接送</strong><span>去程自動預約・回程看完一鍵叫車</span></div>
-    <ul class="cp-preview-list">${rows}</ul>${dates.length>3?`<p class="help-text">…其餘 ${dates.length-3} 次也會依當天預計路況與天氣推薦出門時間（展示規則）。</p>`:''}`;
+    <ul class="cp-preview-list">${rows}</ul>${dates.length>3?`<p class="help-text">…其餘 ${dates.length-3} 次也會依當天預計路況與天氣推薦出門時間。</p>`:''}`;
 }
 function cpSaveLongterm(){
   const s = cpFormSeries();
@@ -124,7 +120,6 @@ function cpSaveLongterm(){
   closeDialog($('cp-longterm-dialog'));
 }
 
-// ---------- 語音 ----------
 let cpRecog = null, cpListenTimer = null;
 function cpListen(lang, fallback, onText){
   const box = $('cp-listen'), T = CP_TEXT[lang] || CP_TEXT.zh;
@@ -154,7 +149,6 @@ function cpParseBooking(text){
   cpRenderDays(); cpRenderPreview();
 }
 
-// ---------- 看診當天 ----------
 function cpRenderVisit(){
   const box = $('cp-visit'); if(!box) return;
   const c = cp(), v = c.visit || cpDefaultVisit(), s = c.series, h = cpHospital(s?.hospital), T = CP_TEXT[v.lang] || CP_TEXT.zh;
@@ -167,14 +161,14 @@ function cpRenderVisit(){
       <div class="cp-queue"><div><span>目前燈號</span><b class="cp-num">${v.current}</b><small>號</small></div><div class="cp-mine"><span>陳奶奶的號碼</span><b class="cp-num">${v.mine}</b><small>號</small></div></div>
       <div class="cp-ai"><span class="cp-ai-label">AI 計算</span>${v.phase==='done'?'':`<p>今天平均每號 <b>${v.avg} 分鐘</b>，前面還有 ${k.ahead} 位，預估還需 <b>${k.wait} 分鐘</b>（約 ${cpFmt(k.turn)} 輪到）</p>`}
       ${v.phase==='home'?`<p class="cp-ai-main">建議 <b>${cpFmt(k.leave)}</b> 出門・去程車已調整為 ${cpFmt(k.leave)} 到樓下</p>`:v.phase==='done'?`<p class="cp-ai-main">看診與領藥完成（${cpFmt(k.end)}），可以叫回程了</p>`:`<p class="cp-ai-main">預估看完（含批價領藥）：<b>${cpFmt(k.end)}</b></p>`}</div>
-      <p class="cp-source">燈號：模擬醫院公開的看診進度（展示資料）</p></section>`;
+      <p class="cp-source">燈號資料：醫院看診進度</p></section>`;
   }else{
     const pct = Math.min(100, Math.round((v.treatNow - v.treatStart)/v.treatLen*100));
     head = `<section class="card cp-queue-card">
       <div class="cp-hosp"><strong>${esc(h.name)}</strong><span>｜透析室</span></div>
       <div class="cp-treat"><div class="cp-treat-row"><span>療程 ${cpFmt(v.treatStart)} 開始・預計 ${Math.round(v.treatLen/60)} 小時</span><b>剩 ${k.left} 分鐘</b></div><div class="cp-bar"><i style="width:${pct}%"></i></div></div>
       <div class="cp-ai"><span class="cp-ai-label">AI 計算</span><p>透析時間固定，依療程開始時間推算結束：<b>${cpFmt(k.end)}</b>，最後 15 分鐘提醒預約回程。</p></div>
-      <p class="cp-source">療程型回診不看燈號，依療程時間觸發（展示資料）</p></section>`;
+      <p class="cp-source">療程型回診依療程時間提醒</p></section>`;
   }
   const delay = v.delayed && v.mode==='opd' ? `<section class="cp-alert" role="status"><strong>偵測到看診進度延遲</strong><p>燈號停在 ${v.delayAt ?? v.current} 號已 25 分鐘。預估結束時間由 <b>${cpFmt(v.prevEnd)}</b> 延後至 <b>${cpFmt(k.end)}</b>，已自動為您向後平移回程派車與司機任務池。</p></section>` : '';
   const retMap = {
@@ -185,8 +179,8 @@ function cpRenderVisit(){
     transferred:{pill:'已改派', text:'原司機無法提早，已轉給待命司機 RCD-3307（銀色），約 2 分鐘到。'}
   };
   const r = retMap[v.ret==='dispatched' && v.driver!=='none' ? v.driver : v.ret] || retMap.none;
-  const doneBtns = v.phase==='done' && v.ret!=='dispatched' ? `<button type="button" class="cp-onetap" data-cpa="one-tap">${esc(T.oneTap)}</button><button type="button" class="btn secondary full" data-cpa="voice-return">🎤 ${esc(T.speak)}</button>` : '';
-  const ret = `<section class="card"><div class="section-heading"><h2>回程</h2><span class="status-pill">${r.pill}</span></div>${wheel}<p class="cp-ret-text">${r.text}</p>${doneBtns}${v.heard?`<p class="help-text">語音辨識：「${esc(v.heard)}」${v.heardSim?'（展示：模擬辨識）':''}</p>`:''}</section>`;
+  const doneBtns = v.phase==='done' && v.ret!=='dispatched' ? `<button type="button" class="cp-onetap" data-cpa="one-tap">${esc(T.oneTap)}</button><button type="button" class="btn secondary full" data-cpa="voice-return"><svg class="ic ic-inline" aria-hidden="true"><use href="#i-mic"/></svg>${esc(T.speak)}</button>` : '';
+  const ret = `<section class="card"><div class="section-heading"><h2>回程</h2><span class="status-pill">${r.pill}</span></div>${wheel}<p class="cp-ret-text">${r.text}</p>${doneBtns}${v.heard?`<p class="help-text">語音辨識：「${esc(v.heard)}」</p>`:''}</section>`;
   box.innerHTML = head + delay + ret;
   cpRenderControls();
 }
@@ -200,7 +194,7 @@ function cpRenderControls(){
   box.innerHTML = (v.mode==='opd'?opd:treat).map(([a,l])=>`<button type="button" class="btn secondary" data-cpa="${a}">${l}</button>`).join('') +
     `<button type="button" class="btn ghost" data-cpa="toggle-mode">切換：${v.mode==='opd'?'療程型（透析）':'門診（燈號）'}</button>
      <button type="button" class="btn ghost" data-cpa="toggle-lang">看護語言：${v.lang==='id'?'Bahasa Indonesia':'中文'}</button>
-     <button type="button" class="btn ghost" data-cpa="reset-visit">重設展示</button>`;
+     <button type="button" class="btn ghost" data-cpa="reset-visit">重設情境</button>`;
 }
 function cpPush(){
   const v = cp().visit, T = CP_TEXT[v.lang] || CP_TEXT.zh, Z = CP_TEXT.zh;
@@ -215,7 +209,6 @@ function cpDispatch(heard, sim){
   cpSave(c=>{ c.visit.ret = 'dispatched'; c.visit.driver = 'none'; if(heard!==undefined){ c.visit.heard = heard; c.visit.heardSim = sim; } }, '已派車：醫院旁的待命車出發');
 }
 
-// ---------- 司機任務池 ----------
 function cpRenderPool(){
   const box = $('driver-pool'); if(!box) return;
   const c = cp(), s = c.series, v = c.visit || cpDefaultVisit(), h = cpHospital(s?.hospital), k = cpVisitCalc(v);
@@ -232,14 +225,13 @@ function cpRenderPool(){
       `<div class="cp-actions"><button type="button" class="btn primary" data-cpa="drv-accept">接單（約 3 分鐘）</button><button type="button" class="btn secondary" data-cpa="drv-transfer">無法接，轉給其他待命司機</button></div>`;
     items.push(`<div class="cp-task cp-task-hot"><div><strong>回程・立即出發</strong><p>${esc(h.name)}大門口 → 住家</p>${s?.wheel?'<span class="cp-tag">需無障礙輪椅車輛</span>':''}${st}</div></div>`);
   }
-  box.innerHTML = `<div class="section-heading"><h2>醫院待命區・任務池</h2><span class="status-pill">示範資料</span></div>
-    <div class="cp-zone"><div><span>${esc(h.zone)}</span><b>待命車 3 台</b></div><div><span>AI 預測 11–12 點離院</span><b>約 8 趟</b></div></div>
+  box.innerHTML = `<div class="section-heading"><h2>醫院待命區・任務池</h2></div>
+    <div class="cp-zone"><div><span>${esc(h.zone)}</span><b>3 台待命</b></div><div><span>AI 預測 11–12 點離院</span><b>約 8 趟</b></div></div>
     ${items.length?items.join(''):'<p class="preview-empty">目前沒有預約或回程任務。</p>'}`;
 }
 
 function renderCare(){ cpRenderHome(); cpRenderVisit(); cpRenderPool(); }
 
-// ---------- 事件 ----------
 document.addEventListener('click', event=>{
   const b = event.target.closest('[data-cpa]'); if(!b) return;
   const a = b.dataset.cpa;
@@ -247,7 +239,7 @@ document.addEventListener('click', event=>{
     if(a==='open-longterm') cpOpenLongterm();
     else if(a==='open-visit') setView('visit');
     else if(a==='toggle-day'){ const d = Number(b.dataset.day); cpDaysSel = cpDaysSel.includes(d)?cpDaysSel.filter(x=>x!==d):[...cpDaysSel,d]; cpRenderDays(); cpRenderPreview(); }
-    else if(a==='voice-booking') cpListen('zh','每週一三五早上九點去台大醫院，需要輪椅車', (text,sim)=>{ const p = $('cp-voice-text'); p.textContent = `語音辨識：「${text}」${sim?'（展示：模擬辨識）':''}`; p.hidden = false; cpParseBooking(text); });
+    else if(a==='voice-booking') cpListen('zh','每週一三五早上九點去台大醫院，需要輪椅車', (text,sim)=>{ const p = $('cp-voice-text'); p.textContent = `語音辨識：「${text}」`; p.hidden = false; cpParseBooking(text); });
     else if(a==='stop-listen') cpStopListen();
     else if(a==='step-home') cpSave(c=>{ c.visit = {...cpDefaultVisit(), lang:c.visit?.lang||'zh'}; });
     else if(a==='step-plus') cpSave(c=>{ const v = c.visit; if(v.current>=v.mine) return; v.current++; v.now += v.avg; v.phase = 'hospital'; });
@@ -258,7 +250,7 @@ document.addEventListener('click', event=>{
     else if(a==='treat-done') cpSave(c=>{ const v = c.visit; v.treatNow = v.treatStart + v.treatLen; v.phase = 'done'; });
     else if(a==='toggle-mode') cpSave(c=>{ c.visit = {...cpDefaultVisit(), lang:c.visit.lang, mode:c.visit.mode==='opd'?'treat':'opd', phase:'hospital'}; });
     else if(a==='toggle-lang') cpSave(c=>{ c.visit.lang = c.visit.lang==='id'?'zh':'id'; });
-    else if(a==='reset-visit') cpSave(c=>{ c.visit = cpDefaultVisit(); }, '已重設展示');
+    else if(a==='reset-visit') cpSave(c=>{ c.visit = cpDefaultVisit(); }, '已重設');
     else if(a==='push-reserve'){ $('cp-push').hidden = true; cpSave(c=>{ c.visit.ret = 'reserved'; }, '回程已預約，待命車保留中'); }
     else if(a==='push-later') $('cp-push').hidden = true;
     else if(a==='one-tap') cpDispatch();
@@ -269,4 +261,5 @@ document.addEventListener('click', event=>{
 });
 $('cp-longterm-form').addEventListener('submit', e=>{ e.preventDefault(); clearError('cp-error'); try{ cpSaveLongterm(); }catch(error){ showError('cp-error', error.message); } });
 for(const id of ['cp-hospital','cp-start','cp-span','cp-time','cp-wheel']) $(id).addEventListener('change', cpRenderPreview);
+if(CP_PARAMS.has('demo')) $('cp-demo').hidden = false;
 renderCare();

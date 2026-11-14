@@ -1,4 +1,3 @@
-/* Care+ 決賽展示流程：沿用原站的綠色系與圓角卡片 */
 .cp-lead{font-size:1.05rem;font-weight:850;color:#173f31;margin-bottom:6px}
 .cp-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px}
 .cp-actions .btn{flex:1 1 200px}
@@ -69,3 +68,4 @@
 @media(max-width:500px){.cp-num{font-size:2.5rem}.cp-preview-list li{grid-template-columns:1fr 1fr}.cp-preview-list small{grid-column:1/-1;text-align:left}}
 @media(prefers-reduced-motion:reduce){.cp-onetap,.cp-mic-ring,.cp-alert,.cp-push-card,.cp-task .status-pill{align-self:flex-start}
 .cp-task-hot{animation:none}}
+@media(max-width:500px){.cp-zone{grid-template-columns:1fr}.cp-task{flex-wrap:wrap}}
