@@ -7,7 +7,9 @@
   <meta name="description" content="taxi 長者安心乘車，簡單安排回診與接送規劃的操作展示網站。">
   <title>taxi｜長者安心乘車</title>
   <link rel="stylesheet" href="./assets/style.css">
+  <link rel="stylesheet" href="./assets/careplus.css">
   <script src="./assets/app.js" defer></script>
+  <script src="./assets/careplus.js" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">跳至主要內容</a>
@@ -24,6 +26,7 @@
         <button type="button" class="destination primary" data-action="open-ride" data-direction="outbound"><span class="destination-icon" aria-hidden="true">✚</span><span>我要去醫院<small>前往回診、看診</small></span><span class="arrow" aria-hidden="true">›</span></button>
         <button type="button" class="destination secondary" data-action="open-ride" data-direction="return"><span class="destination-icon" aria-hidden="true">⌂</span><span>我要回家<small>安排回程交通</small></span><span class="arrow" aria-hidden="true">›</span></button>
       </div>
+      <section class="card cp-card" id="cp-home" aria-live="polite"></section>
       <section class="card" aria-labelledby="next-heading"><div class="section-heading"><h2 id="next-heading">下一次回診</h2><button type="button" class="small-link" data-view="appointments">全部回診</button></div><div id="home-next" aria-live="polite"></div></section>
       <section class="card" aria-labelledby="ride-heading"><div class="section-heading"><h2 id="ride-heading">最近的用車規劃</h2><button type="button" class="small-link" data-view="rides">用車紀錄</button></div><div id="home-ride" aria-live="polite"></div></section>
     </section>
@@ -59,9 +62,17 @@
       <div id="tracking-content" aria-live="polite"></div>
     </section>
 
+    <section id="page-visit" class="page cp-visit" aria-label="看診當天" hidden>
+      <button type="button" class="back-link" data-action="back-senior">〈 返回首頁</button>
+      <div class="page-intro small"><span class="eyebrow">Care+ 看診當天</span><h1>看診進度與回程</h1><p>依醫院公開的看診進度，自動調整出門與回程時間。</p></div>
+      <div id="cp-visit" aria-live="polite"></div>
+      <details class="cp-demo" open><summary>展示控制（錄影用）</summary><div id="cp-demo-controls" class="cp-demo-grid"></div></details>
+    </section>
+
     <section id="page-driver" class="page role-page driver-page" aria-label="司機介面" hidden>
       <div class="role-heading"><button type="button" class="back-link" data-action="switch-role" data-role="senior">〈 返回長者介面</button><span class="role-tag">司機模式</span></div>
       <div class="page-intro small"><span class="eyebrow">taxi 司機工作台</span><h1 id="driver-page-title">附近叫車需求</h1><p>在接單前查看區域熱度，接單後優先顯示乘客資訊。</p></div>
+      <section id="driver-pool" class="card cp-pool" aria-live="polite"></section>
       <section class="card map-card" id="driver-map-card" aria-labelledby="driver-map-title">
         <div class="section-heading"><h2 id="driver-map-title">Google 地圖</h2><span id="driver-map-caption" class="map-label">苗栗示範區域</span></div>
         <iframe class="google-map" id="driver-map" title="Google 地圖：司機附近區域" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
@@ -86,7 +97,6 @@
       <section class="card" aria-labelledby="family-reminder-title"><div class="section-heading"><h2 id="family-reminder-title">關心提醒</h2></div><div id="family-notice"></div><p class="data-update" id="family-refresh-info">每 3 分鐘重新整理畫面資訊</p><button type="button" class="btn secondary full" data-action="refresh-family">立即更新畫面</button></section>
     </section>
 
-    <aside class="demo-note" aria-label="展示版說明"><strong>網站展示版</strong>：此網站不會真的叫車或通知醫院。資料只會保留在目前瀏覽器，請勿輸入真實個人資料。</aside>
   </main>
   <nav class="bottom-nav" aria-label="主要選單">
     <button type="button" class="is-current" data-view="home" aria-current="page"><span class="nav-icon" aria-hidden="true">⌂</span><span>首頁</span></button>
@@ -144,6 +154,25 @@
   <div id="hospital-options" class="hospital-options" role="list"></div>
   <button type="button" class="btn ghost full" data-action="close-dialog">我想自行輸入</button>
 </dialog>
+<dialog class="modal" id="cp-longterm-dialog" aria-labelledby="cp-lt-title">
+  <form id="cp-longterm-form" novalidate>
+    <div class="modal-head"><h2 id="cp-lt-title">長期預約</h2><button type="button" class="close-button" data-action="close-dialog" aria-label="關閉長期預約視窗">關閉</button></div>
+    <p class="modal-sub">一次排好一段時間的回診接送。日期由您決定，每次出門時間由 AI 推薦。</p>
+    <button type="button" class="btn secondary full cp-mic-btn" data-cpa="voice-booking">🎤 用說的設定</button>
+    <p id="cp-voice-text" class="cp-voice-text" hidden></p>
+    <div class="field"><label for="cp-hospital">醫院與科別</label><select id="cp-hospital" class="cp-select"></select></div>
+    <fieldset class="cp-days"><legend>每週哪幾天回診</legend><div id="cp-day-row" class="cp-day-row"></div></fieldset>
+    <div class="field-row"><div class="field"><label for="cp-start">開始日期</label><input type="date" id="cp-start"></div><div class="field"><label for="cp-span">持續多久</label><select id="cp-span" class="cp-select"><option value="14">2 週</option><option value="30" selected>1 個月</option><option value="90">3 個月</option></select></div></div>
+    <div class="field"><label for="cp-time">看診時間</label><input type="time" id="cp-time" value="09:00"></div>
+    <label class="cp-switch"><input type="checkbox" id="cp-wheel"><span class="cp-switch-ui" aria-hidden="true"></span><span>需無障礙輪椅車輛</span></label>
+    <p class="cp-return-note">回程不用約時間：看完診按一鍵叫車，也可以用說的。</p>
+    <div id="cp-preview" class="cp-preview" aria-live="polite"></div>
+    <p class="form-error" id="cp-error" role="alert" hidden></p>
+    <button class="btn primary full submit-btn" type="submit">確認長期預約</button><button type="button" class="btn ghost full" data-action="close-dialog">先不設定</button>
+  </form>
+</dialog>
+<div id="cp-push" class="cp-push" role="alertdialog" aria-label="推播通知" hidden></div>
+<div id="cp-listen" class="cp-listen" role="status" hidden></div>
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 </body>
 </html>

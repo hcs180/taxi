@@ -71,9 +71,9 @@ function clearError(id){const node=$(id);node.hidden=true;node.textContent='';}
 function openDialog(id){const dialog=$(id);if(!dialog.open)dialog.showModal();}
 function closeDialog(element){const dialog=element?.closest?.('dialog')||element;if(dialog?.open)dialog.close();}
 function setView(view){
-  if(!['home','appointments','rides','help','tracking','driver','family'].includes(view))return;
+  if(!['home','appointments','rides','help','tracking','driver','family','visit'].includes(view))return;
   currentView=view;
-  for(const name of ['home','appointments','rides','help','tracking','driver','family'])$(`page-${name}`).hidden=(name!==view);
+  for(const name of ['home','appointments','rides','help','tracking','driver','family','visit'])$(`page-${name}`).hidden=(name!==view);
   document.documentElement.dataset.view=view;
   document.querySelectorAll('[data-view]').forEach(button=>{
     const selected=button.dataset.view===view;
@@ -130,7 +130,7 @@ function renderPrefs(){
   $('font-toggle-secondary').textContent=`選擇字體大小（目前：${fontNames[font]}）`;
 
 }
-function render(){renderHome();renderAppointments();renderRides();renderPrefs();renderTracking();renderDriver();renderFamily();}
+function render(){renderHome();renderAppointments();renderRides();renderPrefs();renderTracking();renderDriver();renderFamily();if(typeof renderCare==='function')renderCare();}
 function openAppointment(id=''){
   $('appointment-form').reset();clearError('appointment-error');
   const a=state.appointments.find(a=>a.id===id);
