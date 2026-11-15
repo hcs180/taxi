@@ -389,6 +389,29 @@ function expectedDates(start, days, len){
   check('補充', '舊版 localStorage 可直接遷移，不出錯', s.careplus && s.careplus.version === 2 && s.rides.find(r => r.id === 'r1').status === 'requested' && s.rides.find(r => r.id === 'r2').driverId === 'drv-c' && s.preferences.fontSize === 'large');
   await p.close();
 
+  // ---------- 補充：使用目前位置尋找附近醫院（公共服務忙碌時改用備援） ----------
+  for(const [label, plan] of [['主要來源忙碌時改用 Nominatim', {coffee:503, main:429, nomi:true}], ['第一個來源成功', {coffee:'ok'}], ['所有來源都失敗', {coffee:503, main:406, nomi:false}]]){
+    const ctxH = await browser.newContext({viewport:VIEW, deviceScaleFactor:1, hasTouch:mode !== 'desktop', isMobile:mode !== 'desktop', geolocation:{latitude:24.5426, longitude:120.8158}, permissions:['geolocation']});
+    p = await ctxH.newPage();
+    p.on('pageerror', e => errors.push(`[${mode}] PAGEERROR ${e.message}`));
+    const hits = [];
+    await p.route(/google\.com|gstatic|googleapis/, r => r.fulfill({status:200, contentType:'text/html', body:''}));
+    await p.route(/overpass\.private\.coffee/, r => { hits.push('coffee'); return plan.coffee === 'ok' ? r.fulfill({status:200, contentType:'application/json', headers:{'access-control-allow-origin':'*'}, body:JSON.stringify({elements:[{type:'node', lat:24.5734, lon:120.8371, tags:{name:'衛生福利部苗栗醫院', 'addr:city':'苗栗市', 'addr:street':'為公路', 'addr:housenumber':'747號'}}, {type:'way', center:{lat:24.56, lon:120.82}, tags:{name:'大千綜合醫院'}}]})}) : r.fulfill({status:plan.coffee, body:''}); });
+    await p.route(/overpass-api\.de/, r => { hits.push('main'); return r.fulfill({status:plan.main || 500, body:''}); });
+    await p.route(/nominatim\.openstreetmap\.org\/search/, r => { hits.push('nomi'); return plan.nomi ? r.fulfill({status:200, contentType:'application/json', headers:{'access-control-allow-origin':'*'}, body:JSON.stringify([{name:'大千綜合醫院', lat:'24.5601', lon:'120.8203', address:{city:'苗栗市', road:'恭敬路', house_number:'36'}}, {name:'小熊動物醫院', lat:'24.55', lon:'120.81', address:{}}, {name:'衛生福利部苗栗醫院', lat:'24.5734', lon:'120.8371', address:{city:'苗栗市', road:'為公路', house_number:'747'}}])}) : r.fulfill({status:503, body:''}); });
+    await p.goto(BASE); await p.waitForTimeout(300);
+    await p.click('#page-home [data-action="open-ride"]'); await p.waitForTimeout(200);
+    await p.click('#ride-destination-hospitals'); await p.waitForTimeout(200);
+    await p.click('[data-action="find-nearby"]'); await p.waitForTimeout(2000);
+    const r = await p.evaluate(() => ({status:$('hospital-status').innerText, names:[...document.querySelectorAll('#hospital-options .hospital-choice strong')].map(e => e.innerText)}));
+    let ok;
+    if(plan.nomi === true) ok = /已找到 2 間/.test(r.status) && /Nominatim/.test(r.status) && r.names[0] === '大千綜合醫院' && !r.names.some(n => /動物/.test(n)) && hits.join() === 'coffee,main,nomi';
+    else if(plan.coffee === 'ok') ok = /已找到 2 間/.test(r.status) && hits.join() === 'coffee' && r.names.includes('衛生福利部苗栗醫院');
+    else ok = /查詢服務目前忙碌/.test(r.status) && r.names.length > 0 && hits.join() === 'coffee,main,nomi';
+    check('補充', `附近醫院搜尋：${label}`, ok, JSON.stringify({...r, hits}));
+    await ctxH.close();
+  }
+
   // ---------- 一般模式：無「Demo」字樣 ----------
   p = await newPage(browser, '');
   await p.evaluate(k => localStorage.removeItem(k), KEY); await p.reload(); await p.waitForTimeout(300);

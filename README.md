@@ -193,7 +193,7 @@ careplus.outbound{}        每次回診的去程狀態（scheduled / accepted / 
 
 1. 把 `index.html`、`assets/`、`README.md`、`DEMO_SCRIPT.md`、`TEST.md`、`.nojekyll` 上傳到 repository 根目錄，並刪除舊的 `assets/careplus.js`。
 2. 在 Settings → Pages 選擇 `main` 分支的 `/ (root)`。
-3. 這次的 CSS 和 JS 都加上版本參數 `?v=2611i`，避免手機沿用舊快取。之後修改時，請同步更新 `index.html` 裡的版本號。
+3. 這次的 CSS 和 JS 都加上版本參數 `?v=2611j`，避免手機沿用舊快取。之後修改時，請同步更新 `index.html` 裡的版本號。
 
 在本機執行：
 
@@ -207,6 +207,6 @@ python3 -m http.server 8765
 - **沒有後端**：沒有真正的醫院 API、車隊 API、推播、排程或跨裝置同步。
 - **語音辨識**：需要 Chrome、Edge 或 Safari 等支援 Web Speech API 的瀏覽器，以及麥克風權限；部分瀏覽器會把語音送到瀏覽器廠商的雲端辨識。
 - **地圖**：使用 Google Maps 網頁嵌入，不需要金鑰，但可能被部分網路政策阻擋，所以另外提供「在 Google 地圖開啟」連結。
-- **附近醫院搜尋**：使用 OpenStreetMap Overpass 第三方服務，資料可能不完整。
+- **附近醫院搜尋**：使用 OpenStreetMap 的公共服務，依序嘗試 Overpass（private.coffee、overpass-api.de）與 Nominatim，每個來源只試一次；這些免費服務在 2026 年常因流量過大回應 429／406，全部忙碌時會提示稍後再試，仍可從範例選擇或自行輸入。資料可能不完整。
 - **目前位置**：只有按「我要回家」且同意瀏覽器定位時才取得，經緯度會送到 OpenStreetMap Nominatim 查詢地址，不會存進分享給家屬的位置；室內定位可能有數十公尺誤差，所以一定請長輩確認。
 - **個資**：請只輸入虛構姓名與地址。本專案不處理任何真實病歷資料。

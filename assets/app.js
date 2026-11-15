@@ -373,32 +373,54 @@ function selectHospital(index){
  else $(hospitalTarget).value=h.address||h.name;
  closeDialog($('hospital-dialog'));toast(`已帶入${h.name}`,1200);
 }
+// 附近醫院：OpenStreetMap 的公共查詢服務常常忙碌（429／406），所以依序嘗試備援來源，每個來源只試一次，不連續重試。
+const OVERPASS_ENDPOINTS=['https://overpass.private.coffee/api/interpreter','https://overpass-api.de/api/interpreter'];
+const nearbyCache={};
+function hospitalItem(name,address,lat,lon,from){
+ if(!name||!Number.isFinite(lat)||!Number.isFinite(lon)||/動物|寵物|獸醫/.test(name))return null;
+ return {name,address,lat,lon,km:haversine(from.lat,from.lon,lat,lon)};
+}
+async function fetchWithTimeout(url,options,ms){
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),ms);
+ try{return await fetch(url,{...options,signal:controller.signal});}finally{clearTimeout(timer);}
+}
+async function overpassHospitals(url,from){
+ const q=`[out:json][timeout:8];(nwr["amenity"~"^(hospital|clinic)$"](around:6500,${from.lat},${from.lon}););out center 40;`;
+ const r=await fetchWithTimeout(url,{method:'POST',body:'data='+encodeURIComponent(q),headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8','Accept':'application/json'}},8000);
+ if(!r.ok)throw Error(`HTTP ${r.status}`);
+ const body=await r.json();
+ return (body.elements||[]).map(e=>{const t=e.tags||{};return hospitalItem(t['name:zh']||t.name,[t['addr:city']||t['addr:district']||'',t['addr:street']||'',t['addr:housenumber']||''].join('').trim(),e.lat??e.center?.lat,e.lon??e.center?.lon,from);}).filter(Boolean);
+}
+async function nominatimHospitals(from){
+ const d=0.06,vb=[from.lon-d,from.lat+d,from.lon+d,from.lat-d].map(n=>n.toFixed(5)).join(',');
+ const r=await fetchWithTimeout(`https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&accept-language=zh-TW&limit=25&bounded=1&viewbox=${vb}&q=${encodeURIComponent('醫院')}`,{headers:{'Accept':'application/json'}},8000);
+ if(!r.ok)throw Error(`HTTP ${r.status}`);
+ const list=await r.json();
+ return (Array.isArray(list)?list:[]).map(x=>{const a=x.address||{};const addr=[a.city||a.county||'',a.city_district||a.suburb||a.town||'',a.road||'',a.house_number?`${a.house_number}${/號$/.test(a.house_number)?'':'號'}`:''].join('');return hospitalItem(x.name||(x.display_name||'').split(',')[0],addr,Number(x.lat),Number(x.lon),from);}).filter(Boolean);
+}
 function findNearbyHospitals(){
  if(!navigator.geolocation){$('hospital-status').textContent='此瀏覽器無法使用定位，仍可從選單選擇或自行輸入。';return;}
  $('hospital-status').textContent='正在取得位置，請確認瀏覽器的定位權限…';
  const request=++hospitalSearchRequest;
  navigator.geolocation.getCurrentPosition(async ({coords})=>{
   if(request!==hospitalSearchRequest)return;
-  $('hospital-status').textContent='正在從 OpenStreetMap 搜尋附近醫院與診所…';
-  const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),8500);
-  try{
-   const q=`[out:json][timeout:8];(nwr["amenity"~"^(hospital|clinic)$"](around:6500,${coords.latitude},${coords.longitude}););out center 35;`;
-   const response=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:'data='+encodeURIComponent(q),headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},signal:controller.signal});
-   if(!response.ok)throw Error('查詢暫時無法使用');
-   const body=await response.json();
-   const results=(body.elements||[]).map(e=>{
-     const lat=e.lat??e.center?.lat,lon=e.lon??e.center?.lon,t=e.tags||{};
-     const name=t['name:zh']||t.name;if(!name||!Number.isFinite(lat)||!Number.isFinite(lon))return null;
-     const km=haversine(coords.latitude,coords.longitude,lat,lon);
-     const address=[t['addr:city']||t['addr:district']||'',t['addr:street']||'',t['addr:housenumber']||''].join('').trim();
-     return {name,address,km,lat,lon};
-   }).filter(Boolean).sort((a,b)=>a.km-b.km).slice(0,15);
-   if(!results.length)throw Error('附近沒有可顯示的醫院資料');
-   hospitalCandidates=results;
-   $('hospital-status').textContent=`已找到 ${results.length} 間附近院所（資料來源：OpenStreetMap）。地址不完整時可自行補充。`;
-   renderHospitalOptions();
-  }catch(e){$('hospital-status').textContent=`${e.name==='AbortError'?'搜尋逾時':e.message}，目前仍可使用下方範例或自行輸入。`;hospitalCandidates=[...demoHospitals];renderHospitalOptions();}
-  finally{clearTimeout(timer);}
+  const from={lat:coords.latitude,lon:coords.longitude},key=`${from.lat.toFixed(3)},${from.lon.toFixed(3)}`;
+  const cached=nearbyCache[key];
+  let results=cached&&Date.now()-cached.at<10*60000?cached.list:null,source='';
+  const sources=[...OVERPASS_ENDPOINTS.map(u=>({label:'OpenStreetMap',run:()=>overpassHospitals(u,from)})),{label:'OpenStreetMap（Nominatim）',run:()=>nominatimHospitals(from)}];
+  for(let i=0;!results&&i<sources.length;i++){
+   if(request!==hospitalSearchRequest)return;
+   $('hospital-status').textContent=i===0?'正在從 OpenStreetMap 搜尋附近醫院與診所…':'查詢服務忙碌，正在改用備援來源搜尋…';
+   try{const list=await sources[i].run();if(list.length){results=list;source=sources[i].label;}}catch{}
+  }
+  if(request!==hospitalSearchRequest)return;
+  if(!results){$('hospital-status').textContent='附近醫院查詢服務目前忙碌（OpenStreetMap 公共服務），請稍後再試，或從下方選擇、自行輸入地址。';hospitalCandidates=[...demoHospitals];renderHospitalOptions();return;}
+  const seen=new Set();
+  results=results.sort((a,b)=>a.km-b.km).filter(h=>{const k=h.name;if(seen.has(k))return false;seen.add(k);return true;}).slice(0,15);
+  nearbyCache[key]={at:Date.now(),list:results};
+  hospitalCandidates=results;
+  $('hospital-status').textContent=`已找到 ${results.length} 間附近院所（資料來源：${source||'OpenStreetMap'}）。地址不完整時可自行補充。`;
+  renderHospitalOptions();
  },()=>{$('hospital-status').textContent='未取得定位權限，仍可從範例選擇或自行輸入地址。';},{enableHighAccuracy:false,timeout:10000,maximumAge:60000});
 }
 function haversine(a,b,c,d){const r=Math.PI/180;const dl=(c-a)*r,do_=(d-b)*r;return 6371*2*Math.asin(Math.sqrt(Math.sin(dl/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(do_/2)**2));}
