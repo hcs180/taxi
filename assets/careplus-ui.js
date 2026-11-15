@@ -280,7 +280,7 @@ function cpRenderPush(){
   if(!n || currentRole !== 'senior'){ box.hidden = true; return; }
   const T = cpT(), Z = CP_TXT.zh, name = state.careplus.passengerName || '您', id = cpLang() === 'id';
   const title = n.type === 'opd' ? Z.opdTitle(name) : Z.treatTitle, body = n.type === 'opd' ? Z.opdBody(n.current, n.mine) : Z.treatBody;
-  box.innerHTML = `<div class="cp-push-card"><div class="cp-push-head"><span class="cp-push-icon" aria-hidden="true">${cpIcon('bell')}</span><span>taxi Care+ 提醒</span><small>現在</small></div>
+  box.innerHTML = `<div class="cp-push-card"><div class="cp-push-head"><span class="cp-push-icon" aria-hidden="true">${cpIcon('bell')}</span><span>yoxi Care+ 提醒</span><small>現在</small></div>
     <p class="cp-push-title">${esc(title)}</p><p class="cp-push-body">${esc(body)}</p><p class="cp-push-ask">${esc(Z.ask)}</p>
     ${id ? `<p class="cp-push-alt">${esc(n.type === 'opd' ? T.opdTitle(name) : T.treatTitle)} ${esc(n.type === 'opd' ? T.opdBody(n.current, n.mine) : T.treatBody)} ${esc(T.ask)}</p>` : ''}
     <div class="cp-push-actions"><button type="button" class="btn secondary" data-cpa="push-later">${cpBi('later')}</button><button type="button" class="btn primary" data-cpa="push-register">${cpBi('register')}</button></div></div>`;

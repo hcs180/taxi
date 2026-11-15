@@ -1,4 +1,4 @@
-# taxi Care+｜高齡者規律回診交通服務
+# yoxi Care+｜高齡者規律回診交通服務
 
 給需要固定回診的長輩使用的叫車服務原型。長者、家屬、司機三種身分共用同一份行程狀態：
 
@@ -191,7 +191,7 @@ careplus.outbound{}        每次回診的去程狀態（scheduled / accepted / 
 
 1. 把 `index.html`、`assets/`、`README.md`、`DEMO_SCRIPT.md`、`TEST.md`、`.nojekyll` 上傳到 repository 根目錄，並刪除舊的 `assets/careplus.js`。
 2. 在 Settings → Pages 選擇 `main` 分支的 `/ (root)`。
-3. 這次的 CSS 和 JS 都加上版本參數 `?v=2611e`，避免手機沿用舊快取。之後修改時，請同步更新 `index.html` 裡的版本號。
+3. 這次的 CSS 和 JS 都加上版本參數 `?v=2611f`，避免手機沿用舊快取。之後修改時，請同步更新 `index.html` 裡的版本號。
 
 在本機執行：
 
