@@ -254,8 +254,8 @@ function expectedDates(start, days, len){
   check('補充', '單次叫車語音失敗：改用文字輸入，不自動填入', rf.fb && !rf.res && rf.time === '' && /不支援/.test(rf.msg), JSON.stringify(rf));
   await p.fill('#ride-voice-input', '後天下午兩點半從馬偕醫院回家，不用輪椅');
   await p.click('[data-cpa="ride-voice-apply"]'); await p.waitForTimeout(150);
-  const rt = await p.evaluate(() => ({pickup:$('ride-pickup').value, dest:$('ride-destination').value, date:$('ride-date').value, time:$('ride-time').value, wheel:$('ride-wheel').checked, dir:currentDirection, back:$('return-button').getAttribute('aria-pressed'), d2:cpAddDays(cpToday(), 2), res:$('ride-voice-result').innerText}));
-  check('補充', '單次叫車文字：解析回家、馬偕乘車處、後天 14:30、一般車', rt.dir === 'return' && rt.back === 'true' && rt.pickup === '馬偕醫院中山北路大門乘車處' && rt.dest === '台北市大安區和平東路二段 100 號' && rt.date === rt.d2 && rt.time === '14:30' && !rt.wheel && !/模擬/.test(rt.res), JSON.stringify(rt));
+  const rt = await p.evaluate(() => ({time:$('ride-time').value, dir:currentDirection, noBack:!document.getElementById('return-button'), title:$('ride-modal-title').innerText, res:$('ride-voice-result').innerText}));
+  check('補充', '去醫院視窗沒有回家選項；說要回家會提示改用「我要回家」，不改動表單', rt.dir === 'outbound' && rt.noBack && rt.title === '叫車去醫院' && rt.time === '' && /要回家，請按首頁的「我要回家」/.test(rt.res), JSON.stringify(rt));
   await p.click('[data-cpa="voice-ride"]'); await p.waitForTimeout(300);
   await p.fill('#ride-voice-input', '從苗栗市中正路100號去為恭醫院看診，明天上午十點');
   await p.click('[data-cpa="ride-voice-apply"]'); await p.waitForTimeout(150);
@@ -280,8 +280,10 @@ function expectedDates(start, days, len){
   await demo(p, 'load'); await demo(p, 'arrive');
   await p.click('.bottom-nav [data-view="home"]');
   await p.click('#page-home [data-cpa="go-home"]'); await p.waitForTimeout(200);
-  const gh = await p.evaluate(() => ({open:$('cp-gohome-dialog').open, pickup:$('gh-pickup').value, home:$('gh-home').value, fields:[...document.querySelectorAll('#cp-gohome-form input')].length}));
-  check('補充', '我要回家：只顯示上車地點與回家地址兩欄，已自動帶入', gh.open && gh.fields === 2 && gh.pickup === '台大醫院常德街大門乘車處' && gh.home === '台北市大安區和平東路二段 100 號', JSON.stringify(gh));
+  const gh = await p.evaluate(() => ({open:$('cp-gohome-dialog').open, pickup:$('gh-pickup').value, home:$('gh-home').value, loc:$('gh-loc').innerText, fields:[...document.querySelectorAll('#cp-gohome-form input, #cp-gohome-form textarea')].length}));
+  check('補充', '我要回家：只有兩欄，帶入目前位置（錄影模式標示模擬定位）與住家地址', gh.open && gh.fields === 2 && gh.pickup === '台大醫院常德街大門乘車處' && /模擬定位/.test(gh.loc) && gh.home === '台北市大安區和平東路二段 100 號', JSON.stringify(gh));
+  const order = await p.evaluate(() => [...document.querySelectorAll('#page-home .cp-main-actions .destination')].map(b => b.innerText.split('\n')[0].trim()));
+  check('補充', '首頁按鈕順序：去醫院、回家、進度、預約', JSON.stringify(order) === JSON.stringify(['我要去醫院','我要回家','看診當天進度','我的長期預約']), JSON.stringify(order));
   await p.click('#cp-gohome-form button[type="submit"]'); await p.waitForTimeout(900);
   s = await S(p);
   check('補充', '我要回家：確認後直接建立回程叫車並同步回程狀態', s.rides.length === 1 && s.rides[0].kind === 'return' && s.rides[0].status === 'requested' && s.careplus.returnRequests[0].status === 'MATCHING' && !(await p.evaluate(() => $('cp-gohome-dialog').open)));
@@ -289,17 +291,38 @@ function expectedDates(start, days, len){
   s = await S(p);
   check('補充', '我要回家：已有回程叫車時不再重複建立，改看叫車狀態', s.rides.length === 1 && (await p.evaluate(() => document.documentElement.dataset.view)) === 'tracking' && !(await p.evaluate(() => $('cp-gohome-dialog').open)));
   await p.close();
-  p = await newPage(browser, '?demo&simvoice');
-  await demo(p, 'reset');
-  await p.click('#page-home [data-cpa="go-home"]'); await p.waitForTimeout(200);
-  const gh2 = await p.evaluate(() => ({pickup:$('gh-pickup').value, home:$('gh-home').value}));
-  await p.click('#cp-gohome-form button[type="submit"]'); await p.waitForTimeout(200);
-  const ghErr = await txt(p, '#gh-error');
-  await p.fill('#gh-pickup', '苗栗市為公路 747 號');
-  await p.click('#cp-gohome-form button[type="submit"]'); await p.waitForTimeout(900);
-  s = await S(p);
-  check('補充', '我要回家（沒有回診行程）：住家自動帶入，補上上車地點即可馬上叫車', gh2.pickup === '' && gh2.home === '台北市大安區和平東路二段 100 號' && /請輸入上車地點/.test(ghErr) && s.rides.length === 1 && s.rides[0].direction === 'return' && s.rides[0].pickup === '苗栗市為公路 747 號' && (await p.evaluate(() => document.documentElement.dataset.view)) === 'tracking', JSON.stringify(gh2));
-  await p.close();
+  {
+    // 一般模式：瀏覽器定位成功，查到地址後帶入
+    const ctxG = await browser.newContext({viewport:VIEW, deviceScaleFactor:1, hasTouch:mode !== 'desktop', isMobile:mode !== 'desktop', geolocation:{latitude:25.0405, longitude:121.519}, permissions:['geolocation']});
+    p = await ctxG.newPage();
+    p.on('pageerror', e => errors.push(`[${mode}] PAGEERROR ${e.message}`));
+    await p.route(/google\.com|gstatic|googleapis/, r => r.fulfill({status:200, contentType:'text/html', body:''}));
+    await p.route(/nominatim\.openstreetmap\.org/, r => r.fulfill({status:200, contentType:'application/json', headers:{'access-control-allow-origin':'*'}, body:JSON.stringify({name:'國立臺灣大學醫學院附設醫院', address:{city:'臺北市', city_district:'中正區', road:'常德街', house_number:'1'}})}));
+    await p.goto(BASE); await p.evaluate(k => localStorage.removeItem(k), KEY); await p.reload(); await p.waitForTimeout(300);
+    await p.evaluate(() => update(s => { s.preferences.homeAddress = '苗栗縣苗栗市聯大 1 號'; }));
+    await p.click('#page-home [data-cpa="go-home"]'); await p.waitForTimeout(1200);
+    const g = await p.evaluate(() => ({pickup:$('gh-pickup').value, home:$('gh-home').value, loc:$('gh-loc').innerText}));
+    check('補充', '我要回家（一般模式）：用瀏覽器定位帶入目前位置的地址與住家地址', g.pickup === '國立臺灣大學醫學院附設醫院（臺北市中正區常德街1號）' && g.home === '苗栗縣苗栗市聯大 1 號' && /已帶入目前位置/.test(g.loc), JSON.stringify(g));
+    await p.click('#cp-gohome-form button[type="submit"]'); await p.waitForTimeout(900);
+    s = await S(p);
+    check('補充', '我要回家（一般模式）：確認後馬上建立回家叫車', s.rides.length === 1 && s.rides[0].direction === 'return' && s.rides[0].pickup === g.pickup && s.rides[0].destination === '苗栗縣苗栗市聯大 1 號' && (await p.evaluate(() => document.documentElement.dataset.view)) === 'tracking');
+    await ctxG.close();
+  }
+  {
+    // 一般模式：沒有定位權限時提示，並可自行輸入
+    p = await newPage(browser, '');
+    await p.evaluate(k => localStorage.removeItem(k), KEY); await p.reload(); await p.waitForTimeout(300);
+    await p.evaluate(() => update(s => { s.preferences.homeAddress = '台北市大安區和平東路二段 100 號'; }));
+    await p.click('#page-home [data-cpa="go-home"]'); await p.waitForTimeout(1200);
+    const g2 = await p.evaluate(() => ({pickup:$('gh-pickup').value, home:$('gh-home').value, loc:$('gh-loc').innerText}));
+    await p.click('#cp-gohome-form button[type="submit"]'); await p.waitForTimeout(200);
+    const ghErr = await txt(p, '#gh-error');
+    await p.fill('#gh-pickup', '苗栗市為公路 747 號');
+    await p.click('#cp-gohome-form button[type="submit"]'); await p.waitForTimeout(900);
+    s = await S(p);
+    check('補充', '我要回家（無定位權限）：提示原因，住家仍自動帶入，補上上車地點即可叫車', g2.pickup === '' && /定位/.test(g2.loc) && g2.home === '台北市大安區和平東路二段 100 號' && /請輸入上車地點/.test(ghErr) && s.rides.length === 1 && s.rides[0].pickup === '苗栗市為公路 747 號', JSON.stringify(g2));
+    await p.close();
+  }
 
   // ---------- 12 司機轉單 ----------
   p = await newPage(browser, '?demo&simvoice');

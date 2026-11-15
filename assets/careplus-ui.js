@@ -161,9 +161,38 @@ function cpOpenGoHome(){
   cpGoHome = {mode:careplus ? 'careplus' : 'single', wheel:Boolean(booking && booking.wheelchairRequired)};
   $('cp-gohome-form').reset(); clearError('gh-error');
   $('gh-pickup').value = pickup; $('gh-home').value = home;
-  $('gh-note').textContent = careplus ? `${c.h.name}${c.q.phase === 'done' ? '看診已完成' : '看完了嗎？'}按下就馬上叫車，家屬端同步更新` : '按下就馬上叫車，家屬端同步更新';
+  $('gh-note').textContent = careplus ? `${c.h.name}${c.q.phase === 'done' ? '看診已完成' : '看完了嗎？'}確認後按下就馬上叫車，家屬端同步更新` : '確認後按下就馬上叫車，家屬端同步更新';
+  cpGoHome.fallback = pickup; cpGoHome.hospital = careplus ? c.h : null;
   openDialog('cp-gohome-dialog');
-  if(!pickup) setTimeout(() => $('gh-pickup').focus(), 50);
+  cpLocatePickup();
+}
+// 帶入目前位置：一般模式用瀏覽器定位並查詢地址；錄影模式使用模擬定位（看診醫院乘車處），畫面會標示。
+let cpLocateSeq = 0;
+function cpLocatePickup(){
+  const seq = ++cpLocateSeq, input = $('gh-pickup'), status = $('gh-loc'), before = input.value;
+  const setStatus = (t, tone = '') => { status.textContent = t; status.className = `cp-gh-loc ${tone}`; };
+  const fill = (v, t) => { if(seq !== cpLocateSeq) return; if(input.value === before || input.value === '' || input.value === cpGoHome.fallback){ input.value = v; } setStatus(t, 'ok'); };
+  const fail = t => { if(seq !== cpLocateSeq) return; setStatus(t, 'warn'); if(!input.value) input.focus(); };
+  if(CP_DEMO){
+    const h = cpGoHome.hospital || cpHospital((cpActiveBooking(state) || {}).hospitalId || 'ntuh');
+    input.value = h.pickupPoint; setStatus('已帶入目前位置（模擬定位）', 'ok'); return;
+  }
+  if(!navigator.geolocation){ fail(cpGoHome.fallback ? '這個瀏覽器無法定位，已帶入看診醫院的乘車處，請確認' : '這個瀏覽器無法定位，請直接輸入上車地點'); return; }
+  setStatus('正在取得目前位置…');
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const lat = pos.coords.latitude, lon = pos.coords.longitude, coord = `目前位置（${lat.toFixed(5)}, ${lon.toFixed(5)}）`;
+    try{
+      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=18&accept-language=zh-TW&lat=${lat}&lon=${lon}`, {headers:{'Accept':'application/json'}});
+      if(!r.ok) throw Error('lookup');
+      const j = await r.json(), a = j.address || {};
+      const addr = [a.city || a.county || '', a.city_district || a.suburb || a.town || a.district || '', a.road || '', a.house_number ? `${a.house_number}${/號$/.test(a.house_number) ? '' : '號'}` : ''].join('');
+      const name = j.name && !/^\d/.test(j.name) ? j.name : '';
+      const text = name && addr ? `${name}（${addr}）` : (name || addr || (j.display_name || '').split(',').slice(0, 3).join(' ').trim() || coord);
+      fill(text, '已帶入目前位置，請確認');
+    }catch{ fill(coord, '已帶入目前位置（查不到門牌，請確認或修改）'); }
+  }, err => {
+    fail(err && err.code === 1 ? (cpGoHome.fallback ? '沒有定位權限，已帶入看診醫院的乘車處，請確認' : '沒有定位權限，請直接輸入上車地點') : (cpGoHome.fallback ? '暫時無法定位，已帶入看診醫院的乘車處，請確認' : '暫時無法定位，請直接輸入上車地點'));
+  }, {enableHighAccuracy:true, timeout:10000, maximumAge:60000});
 }
 $('cp-gohome-form').addEventListener('submit', e => {
   e.preventDefault(); clearError('gh-error');
@@ -186,7 +215,12 @@ $('cp-gohome-form').addEventListener('submit', e => {
 // ---------- 單次叫車的語音輸入 ----------
 function cpShowRideVoice(text, simulated){
   const p = cpParseRideText(text), items = [], notes = [], home = state.preferences.homeAddress || '';
-  if(p.direction){ updateDirection(p.direction); items.push(p.direction === 'return' ? '回家' : '去醫院'); }
+  if(p.direction === 'return'){
+    const box = $('ride-voice-result');
+    box.innerHTML = `<p class="cp-voice-heard">${simulated ? '<span class="cp-pill">模擬語音辨識</span>' : ''}辨識結果：「${esc(text)}」</p><p class="cp-voice-note">這裡是叫車去醫院。要回家，請按首頁的「我要回家」，會直接帶入目前位置。</p>`;
+    box.hidden = false; $('ride-voice-fallback').hidden = true; return;
+  }
+  if(p.direction) items.push('去醫院');
   const dir = currentDirection;
   const placeValue = (info, role) => {
     if(info.kind === 'home'){ if(!home) notes.push('還沒有設定住家地址，請在「設定」填寫或直接輸入'); return home; }
@@ -459,6 +493,7 @@ document.addEventListener('click', ev => {
       case 'open-visit': if(!state.careplus.focusAppointmentId && cpNextAppointment(state)) cpEvents.focus(cpNextAppointment(state).id); setView('visit'); break;
       case 'open-booking': if(cpActiveBooking(state)) setView('booking'); else cpOpenBookingForm(); break;
       case 'go-home': cpOpenGoHome(); break;
+      case 'gh-locate': cpLocatePickup(); break;
       case 'open-booking-form': cpOpenBookingForm(id); break;
       case 'toggle-day': { const d = Number(btn.dataset.day); cpDraftDays = cpDraftDays.includes(d) ? cpDraftDays.filter(x => x !== d) : [...cpDraftDays, d]; cpRenderDays(); cpRenderPreview(); break; }
       case 'voice-booking': cpVoice.listen({lang:'zh', prompt:'請說出回診需求', simulatedText:'每週一三五早上九點去台大醫院腎臟內科三診，預約一個月，要輪椅車', onResult:cpShowVoiceResult, onFail:cpVoiceBookingFail}); break;

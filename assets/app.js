@@ -153,6 +153,7 @@ function updateDirection(direction){
   currentDirection=direction;
   for(const kind of ['outbound','return']){
     const button=$(`${kind}-button`),chosen=kind===direction;
+    if(!button)continue;
     button.classList.toggle('active',chosen);
     button.setAttribute('aria-pressed',String(chosen));
   }
@@ -166,6 +167,8 @@ function updateDirection(direction){
   $('ride-destination-hospitals').hidden=direction!=='outbound';
 }
 function openRide(direction='outbound',appointmentId=''){
+  if(direction==='return'&&typeof cpOpenGoHome==='function'){cpOpenGoHome();return;}
+  direction='outbound';
   $('ride-form').reset();clearError('ride-error');
   $('ride-voice-result').hidden=true;$('ride-voice-fallback').hidden=true;
   selectedAppointment=state.appointments.find(a=>a.id===appointmentId)||upcoming()[0]||null;
