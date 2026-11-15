@@ -26,6 +26,14 @@
 .cp-onetap-hint{font-size:.85rem;font-weight:800;color:#7b3a20}
 .cp-onetap{display:block;width:100%;margin:12px 0 0;min-height:104px;border:0;border-radius:22px;background:#c4522f;color:#fff;font-size:1.38rem;font-weight:900;line-height:1.3;padding:14px 16px;box-shadow:0 10px 24px rgba(196,82,47,.3)}
 .cp-onetap:active{transform:translateY(1px)}
+.cp-autofill{background:#f1f8f3;border:1.5px solid #cfe3d6;border-radius:16px;padding:12px 14px;margin:12px 0 0}
+.cp-autofill-title{display:flex;align-items:center;font-size:.8rem;font-weight:850;color:#1d6a4b}
+.cp-autofill-title .ic{color:#2e8a62}
+.cp-autofill-list{margin:8px 0 0;display:grid;gap:5px}
+.cp-autofill-list>div{display:grid;grid-template-columns:2.6em 1fr;gap:8px;align-items:baseline}
+.cp-autofill-list dt{font-size:.72rem;font-weight:800;color:#5d7266}
+.cp-autofill-list dd{margin:0;font-size:.82rem;font-weight:750;color:#173f31;overflow-wrap:anywhere}
+.cp-route{font-size:.78rem!important;font-weight:750;color:#2d5a46!important;margin-top:6px!important;overflow-wrap:anywhere}
 .cp-speak{margin-top:10px;display:flex;align-items:center;justify-content:center}
 .cp-speak .ic{width:1.15em;height:1.15em}
 

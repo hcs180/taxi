@@ -161,6 +161,8 @@ function expectedDates(start, days, len){
   const homeTap = await p.locator('#cp-home-status [data-cpa="one-tap"]').isVisible();
   const tapText = await txt(p, '#cp-home-status');
   check(9, '看診完成後首頁最上方出現「我好了，一鍵叫車」與「用說的叫車」', homeTap && /我好了，一鍵叫車/.test(tapText) && /用說的叫車/.test(tapText));
+  const af = await txt(p, '#cp-home-status .cp-autofill');
+  check('補充', '一鍵回程：按下前顯示已自動帶入的上車地點、回程地址與家屬同步', /已自動帶入/.test(af) && /台大醫院常德街大門乘車處/.test(af) && /台北市大安區和平東路二段 100 號/.test(af) && /家屬端同步更新/.test(af), af.replace(/\n+/g,' '));
   const bb = await p.locator('#cp-home-status [data-cpa="one-tap"]').boundingBox();
   await p.mouse.dblclick(bb.x + bb.width / 2, bb.y + bb.height / 2); await p.waitForTimeout(100);
   await p.evaluate(() => { cpEvents.requestReturn('tap'); cpEvents.requestReturn('tap'); });
@@ -168,6 +170,7 @@ function expectedDates(start, days, len){
   s = await S(p);
   const ret = s.rides.filter(r => r.kind === 'return');
   check(10, '重複點一鍵叫車不產生重複訂單', ret.length === 1, `回程訂單數 ${ret.length}`);
+  check(10, '連點兩下不會誤開其他視窗', !(await p.evaluate(() => [...document.querySelectorAll('dialog')].some(d => d.open))));
   check(9, '一鍵叫車：狀態為等待司機接單、未顯示司機', ret[0] && ret[0].status === 'requested' && !ret[0].driverId && s.careplus.returnRequests[0].status === 'MATCHING' && /正在尋找車輛/.test(await txt(p, '#cp-home-status')) && !/RAB-5821/.test(await txt(p, '#cp-home-status')));
   await role(p, 'driver');
   const pool9 = await txt(p, '#cp-pool');
@@ -215,7 +218,7 @@ function expectedDates(start, days, len){
   s = await S(p);
   const vc = await txt(p, '#cp-home-status .cp-voice-confirm');
   check('補充', '用說的叫車：辨識後先顯示確認，尚未建立訂單', lis && /已聽到：「我好了，幫我叫車」/.test(vc) && /模擬語音辨識/.test(vc) && s.rides.length === 0, vc.replace(/\n+/g,' '));
-  await p.click('#cp-home-status [data-cpa="voice-confirm"]'); await p.waitForTimeout(200);
+  await p.click('#cp-home-status [data-cpa="voice-confirm"]'); await p.waitForTimeout(900);
   s = await S(p);
   check('補充', '用說的叫車：確認後才建立一筆回程叫車', s.rides.length === 1 && s.rides[0].status === 'requested');
   await p.close();
@@ -275,7 +278,7 @@ function expectedDates(start, days, len){
   // ---------- 12 司機轉單 ----------
   p = await newPage(browser, '?demo&simvoice');
   await demo(p, 'load'); await demo(p, 'arrive'); await demo(p, 'done');
-  await p.click('.cp-return [data-cpa="one-tap"]'); await p.waitForTimeout(150);
+  await p.click('.cp-return [data-cpa="one-tap"]'); await p.waitForTimeout(900);
   await role(p, 'driver');
   await p.click('[data-cpa="drv-transfer"]'); await p.waitForTimeout(200);
   s = await S(p);
@@ -293,7 +296,7 @@ function expectedDates(start, days, len){
   // ---------- 補充：媒合失敗、重新叫車、取消 ----------
   p = await newPage(browser, '?demo&simvoice');
   await demo(p, 'load'); await demo(p, 'arrive'); await demo(p, 'done');
-  await p.click('.cp-return [data-cpa="one-tap"]'); await p.waitForTimeout(150);
+  await p.click('.cp-return [data-cpa="one-tap"]'); await p.waitForTimeout(900);
   await demo(p, 'fail');
   s = await S(p);
   const failText = await txt(p, '.cp-return');
@@ -322,7 +325,7 @@ function expectedDates(start, days, len){
   // ---------- 16 重設 ----------
   p = await newPage(browser, '?demo&simvoice');
   await demo(p, 'load'); await demo(p, 'arrive'); await demo(p, 'done');
-  await p.click('.cp-return [data-cpa="one-tap"]');
+  await p.click('.cp-return [data-cpa="one-tap"]'); await p.waitForTimeout(900);
   await demo(p, 'reset'); await p.waitForTimeout(200);
   s = await S(p);
   const view = await p.evaluate(() => document.documentElement.dataset.view);

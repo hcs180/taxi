@@ -389,7 +389,7 @@ const cpEvents = {
       rr.rideId = ride.id; rr.requestedAt = cpNowIso(); rr.history.push({status:'REQUESTED', at:rr.requestedAt}); created = true;
       cpLog(s, 'request', source === 'voice' ? '已用語音發起回程叫車' : '已發起回程叫車', a.id);
     });
-    toast(created ? '已送出叫車，正在尋找車輛' : '回程叫車已在進行中');
+    toast(created ? '已送出叫車，家屬端已同步' : '回程叫車已在進行中');
   },
   retryRide(id){
     cpApply(s => {

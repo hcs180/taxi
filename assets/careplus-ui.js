@@ -33,6 +33,17 @@ function cpCtx(s = state){
 const cpModeLabel = m => m === 'treatment' ? '固定時長療程' : '一般門診';
 const cpWeekdaysLabel = days => `每週${[...days].sort((x,y) => (x||7)-(y||7)).map(d => CP_DAYS[d]).join('、')}`;
 const cpVehicleLabel = w => w ? '無障礙輪椅車輛' : '一般車輛';
+const cpReturnRoute = (h, b) => ({pickup:h ? h.pickupPoint : '', home:(b && b.pickupAddress) || state.preferences.homeAddress || ''});
+// 一鍵回程：按下前先讓長輩看到系統已自動帶入的上車地點、回程地址與家屬通知。
+function cpAutofillHtml(h, b){
+  const r = cpReturnRoute(h, b);
+  return `<div class="cp-autofill" aria-label="已自動帶入的回程資訊"><p class="cp-autofill-title">${cpIcon('check','ic ic-inline')}已自動帶入，按一下就完成叫車</p>
+    <dl class="cp-autofill-list">
+      <div><dt>上車</dt><dd>${esc(r.pickup)}</dd></div>
+      <div><dt>回到</dt><dd>${esc(r.home || '尚未設定住家地址')}</dd></div>
+      <div><dt>家屬</dt><dd>叫車、司機接單、到家，家屬端同步更新</dd></div>
+    </dl></div>`;
+}
 
 // ---------- 長者首頁 ----------
 function cpRenderHome(){
@@ -45,11 +56,11 @@ function cpRenderHome(){
   let html = '';
   if(rr && ride && CP_ACTIVE_RETURN.includes(rr.status)){
     const d = ride.driverId ? cpDriver(ride.driverId) : null;
-    html = `<section class="cp-status-card ${d ? 'has-car' : ''}"><div><span class="cp-status-label">回程</span><strong>${esc(CP_RETURN_LABEL[rr.status])}</strong>${d ? `<p class="cp-status-plate">${esc(d.plate)}</p><p>${esc(d.color)}${esc(d.model)}・司機 ${esc(d.name)}${rr.status === 'ACCEPTED' && ride.demoVehicle ? `・約 ${ride.demoVehicle.etaMinutes} 分鐘到達` : ''}</p>` : `<p>${ride.status === 'rematching' ? '正在為您改派其他待命司機' : '系統正在通知附近的待命司機'}</p>`}</div><button type="button" class="btn secondary" data-cpa="open-visit">查看</button></section>`;
+    html = `<section class="cp-status-card ${d ? 'has-car' : ''}"><div><span class="cp-status-label">回程</span><strong>${esc(CP_RETURN_LABEL[rr.status])}</strong>${d ? `<p class="cp-status-plate">${esc(d.plate)}</p><p>${esc(d.color)}${esc(d.model)}・司機 ${esc(d.name)}${rr.status === 'ACCEPTED' && ride.demoVehicle ? `・約 ${ride.demoVehicle.etaMinutes} 分鐘到達` : ''}</p>` : `<p>${ride.status === 'rematching' ? '正在為您改派其他待命司機' : '系統正在通知附近的待命司機'}</p>`}<p class="cp-route">${esc(ride.pickup)} → ${esc(ride.destination)}</p></div><button type="button" class="btn secondary" data-cpa="open-visit">查看</button></section>`;
   } else if(rr && rr.status === 'MATCH_FAILED'){
     html = `<section class="cp-status-card warn"><div><span class="cp-status-label">回程</span><strong>暫時找不到合適車輛</strong><p>可以重新叫車，或稍後再試。</p></div><button type="button" class="btn primary" data-cpa="retry-ride" data-id="${esc(ride.id)}">重新叫車</button></section>`;
   } else if(q && q.phase === 'done' && rr && ['NO_REQUEST','INTEREST_REGISTERED','CANCELLED'].includes(rr.status)){
-    html = `<section class="cp-onetap-wrap"><p class="cp-onetap-hint">${esc(h.name)}${q.mode === 'opd' ? '看診' : '療程'}已完成</p>${cpVoiceConfirmHtml()}<button type="button" class="cp-onetap" data-cpa="one-tap">${cpBi('oneTap')}</button><button type="button" class="btn secondary full cp-speak" data-cpa="voice-return">${cpIcon('mic','ic ic-inline')}${cpBi('speak')}</button></section>`;
+    html = `<section class="cp-onetap-wrap"><p class="cp-onetap-hint">${esc(h.name)}${q.mode === 'opd' ? '看診' : '療程'}已完成</p>${cpVoiceConfirmHtml()}${cpAutofillHtml(h, b)}<button type="button" class="cp-onetap" data-cpa="one-tap">${cpBi('oneTap')}</button><button type="button" class="btn secondary full cp-speak" data-cpa="voice-return">${cpIcon('mic','ic ic-inline')}${cpBi('speak')}</button></section>`;
   } else if(q && q.phase !== 'done' && a){
     html = `<section class="cp-status-card"><div><span class="cp-status-label">${esc(cpShortDate(a.date))} 看診當天</span><strong>${q.mode === 'opd' ? `目前 ${q.currentQueueNumber} 號・您 ${q.patientQueueNumber} 號` : `療程中・剩 ${k.remaining} 分鐘`}</strong><p>${q.phase === 'before' ? `建議 ${cpFmt(k.departure)} 出門` : `預估 ${cpFmt(k.finish)} 看完`}${q.delay ? '・看診進度延遲' : ''}${rr && rr.status === 'INTEREST_REGISTERED' ? '・已登記回程' : ''}</p></div><button type="button" class="btn secondary" data-cpa="open-visit">查看</button></section>`;
   }
@@ -244,7 +255,7 @@ function cpReturnCard({a, q, k, rr, ride, b, h}){
   const wheel = rr && rr.wheelchairRequired ? cpPill('無障礙輪椅車輛','warm') : '';
   const tone = {INTEREST_REGISTERED:'', MATCHING:'key', ACCEPTED:'key', DRIVER_ARRIVING:'key', ONBOARD:'key', COMPLETED:'muted', CANCELLED:'muted', MATCH_FAILED:'warn'}[status] || '';
   let body = '';
-  const oneTap = big => `<button type="button" class="${big ? 'cp-onetap' : 'btn primary full'}" data-cpa="one-tap">${big ? cpBi('oneTap') : esc(done ? CP_TXT.zh.oneTap : '我已看完，一鍵叫車')}</button><button type="button" class="btn secondary full cp-speak" data-cpa="voice-return">${cpIcon('mic','ic ic-inline')}${cpBi('speak')}</button>`;
+  const oneTap = big => `${cpAutofillHtml(h, b)}<button type="button" class="${big ? 'cp-onetap' : 'btn primary full'}" data-cpa="one-tap">${big ? cpBi('oneTap') : esc(done ? CP_TXT.zh.oneTap : '我已看完，一鍵叫車')}</button><button type="button" class="btn secondary full cp-speak" data-cpa="voice-return">${cpIcon('mic','ic ic-inline')}${cpBi('speak')}</button>`;
   if((status === 'NO_REQUEST' || status === 'CANCELLED') && q.phase === 'before'){
     body = `<p>回程不會預先派車。預估 <b>${cpFmt(k.finish)}</b> 前後看完，抵達醫院後可以先登記回程需求。</p>`;
   } else if(status === 'NO_REQUEST' || status === 'CANCELLED'){
@@ -254,7 +265,7 @@ function cpReturnCard({a, q, k, rr, ride, b, h}){
     body = `<p class="cp-reg">${cpIcon('check','ic ic-inline')}回程需求已登記，尚未叫車。</p><p class="help-text">司機端只會看到預估需求（約 ${cpFmt(k.finish)}），不會派車。看完診再按下方按鈕。</p>${q.phase === 'before' ? '' : oneTap(done)}<button type="button" class="btn ghost full" data-cpa="unregister-return">取消登記</button>`;
   } else if(status === 'MATCHING'){
     body = `<div class="cp-searching"><span class="cp-spinner" aria-hidden="true"></span><div><strong>正在尋找車輛</strong><p>${ride.status === 'rematching' ? '原司機無法接單，正在改派其他待命司機。' : '已通知醫院附近的待命司機，等待司機接單。'}</p></div></div>
-      <p class="help-text">上車地點：${esc(ride.pickup)}</p><button type="button" class="btn ghost full" data-cpa="cancel-ride" data-id="${esc(ride.id)}">取消叫車</button>`;
+      <p class="cp-route">${esc(ride.pickup)} → ${esc(ride.destination)}</p><button type="button" class="btn ghost full" data-cpa="cancel-ride" data-id="${esc(ride.id)}">取消叫車</button>`;
   } else if(status === 'MATCH_FAILED'){
     body = `<p>附近暫時沒有合適的${rr.wheelchairRequired ? '無障礙' : ''}車輛。</p><button type="button" class="btn primary full" data-cpa="retry-ride" data-id="${esc(ride.id)}">重新叫車</button><button type="button" class="btn ghost full" data-cpa="cancel-ride" data-id="${esc(ride.id)}">取消</button>`;
   } else if(['ACCEPTED','DRIVER_ARRIVING','ONBOARD'].includes(status) && d){
@@ -301,7 +312,7 @@ function cpTimeline(){
     {label:q.mode === 'opd' ? '等待看診' : '療程進行中', st:done ? 'done' : arrived ? 'current' : 'pending', note:q.mode === 'opd' ? `目前 ${q.currentQueueNumber} 號／您 ${q.patientQueueNumber} 號` : `剩 ${k.remaining} 分鐘`},
     {label:'看診進度延誤', st:q.delay ? 'warn' : done ? 'skip' : 'pending', note:q.delay ? `預估結束 ${cpFmt(q.delay.fromFinish)} → ${cpFmt(k.finish)}` : '目前無延誤'},
     {label:q.mode === 'opd' ? '看診完成' : '療程完成', st:done ? 'done' : 'predicted', note:done ? cpFmt(q.finishedAt) : `預估 ${cpFmt(k.finish)}`},
-    {label:'已發起回程叫車', st:requested ? 'done' : rs === 'INTEREST_REGISTERED' ? 'current' : 'predicted', note:requested ? '乘客已按下叫車' : rs === 'INTEREST_REGISTERED' ? '已登記回程需求，尚未叫車' : `預估 ${cpFmt(k.finish)} 前後`},
+    {label:'已發起回程叫車', st:requested ? 'done' : rs === 'INTEREST_REGISTERED' ? 'current' : 'predicted', note:requested ? `已叫車：${ride.pickup} → 住家` : rs === 'INTEREST_REGISTERED' ? '已登記回程需求，尚未叫車' : `預估 ${cpFmt(k.finish)} 前後`},
     {label:'回程司機已接單', st:['ACCEPTED','DRIVER_ARRIVING','ONBOARD','COMPLETED'].includes(rs) ? 'done' : rs === 'MATCHING' ? 'current' : rs === 'MATCH_FAILED' ? 'warn' : 'pending', note:d ? `${d.plate}・司機 ${d.name}` : rs === 'MATCHING' ? '正在尋找車輛' : rs === 'MATCH_FAILED' ? '暫時找不到車輛' : '尚未叫車'},
     {label:'已返家', st:rs === 'COMPLETED' ? 'done' : rs === 'ONBOARD' ? 'current' : 'pending', note:rs === 'COMPLETED' ? '已平安到家' : rs === 'ONBOARD' ? '回家途中' : ''}
   ];
@@ -398,6 +409,9 @@ $('confirm-dialog').addEventListener('close', () => { cpConfirmFn = null; });
 
 // ---------- 事件 ----------
 function cpVisitAction(fn){ try{ fn(); }catch(e){ toast(e.message); } }
+// 叫車後畫面會立刻改變，長輩若連點兩下，第二下可能落在剛出現的其他按鈕上；短時間內先擋掉。
+let cpTapGuard = 0;
+document.addEventListener('click', ev => { if(Date.now() < cpTapGuard && !ev.target.closest('#cp-demo-root')){ ev.stopPropagation(); ev.preventDefault(); } }, true);
 document.addEventListener('click', ev => {
   const btn = ev.target.closest('[data-cpa]'); if(!btn) return;
   const a = btn.dataset.cpa, id = btn.dataset.id;
@@ -420,11 +434,11 @@ document.addEventListener('click', ev => {
       case 'register-return': case 'push-register': cpEvents.registerReturn(); break;
       case 'unregister-return': cpEvents.unregisterReturn(); break;
       case 'push-later': cpEvents.dismissNotice(); break;
-      case 'one-tap': cpVoiceReturn = null; cpEvents.requestReturn('tap'); break;
+      case 'one-tap': cpVoiceReturn = null; cpEvents.requestReturn('tap'); cpTapGuard = Date.now() + 800; break;
       case 'voice-return': { const T = cpT(); cpVoice.listen({lang:cpLang(), prompt:T.listen, simulatedText:cpLang() === 'id' ? 'Sudah selesai, mau pulang' : '我好了，幫我叫車',
         onResult:(text, sim) => { cpVoiceReturn = cpIsReturnPhrase(text) ? {ok:true, text, simulated:sim} : {ok:false, text:`沒有聽清楚：「${text}」`}; render(); },
         onFail:r => { cpVoiceReturn = {ok:false, text:cpVoice.failText(r)}; render(); }}); break; }
-      case 'voice-confirm': cpVoiceReturn = null; cpEvents.requestReturn('voice'); break;
+      case 'voice-confirm': cpVoiceReturn = null; cpEvents.requestReturn('voice'); cpTapGuard = Date.now() + 800; break;
       case 'voice-cancel': cpVoiceReturn = null; render(); break;
       case 'cancel-ride': cpConfirm('取消這次叫車？', '取消後司機將不會前往接送。', '確認取消', () => cpEvents.cancelRide(id)); break;
       case 'retry-ride': cpEvents.retryRide(id); break;
