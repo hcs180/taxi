@@ -135,32 +135,3 @@ main{width:min(100%,760px);margin:0 auto}.page{padding:42px 0 8px}.page-intro{ma
  :root[data-role="driver"][data-role-font="large"] .role-page .section-heading h2,:root[data-role="family"][data-role-font="large"] .role-page .section-heading h2{font-size:clamp(26px,.9rem,39px)}
 }
 @media(max-width:390px){.vehicle-grid{grid-template-columns:1fr}.vehicle-plate{font-size:clamp(38px,1.65rem,62px)}.hospital-modal{max-height:95dvh}}
-.sprite{position:absolute;width:0;height:0;overflow:hidden}
-.ic{width:1em;height:1em;display:block;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-.ic-inline{display:inline-block;vertical-align:-.15em;margin-right:.35em}
-.destination-icon{font-size:0;line-height:0}
-.destination-icon .ic{width:30px;height:30px;stroke-width:2.6}
-.destination.primary .destination-icon{color:#fff}
-.destination.secondary .destination-icon{color:#145540}
-.arrow{display:grid;place-items:center;line-height:0}
-.arrow .ic{width:28px;height:28px;stroke-width:2.6}
-.nav-icon{display:grid;place-items:center;line-height:0}
-.nav-icon .ic{width:1.35em;height:1.35em}
-.back-link{display:inline-flex;align-items:center;gap:6px}
-.back-link .ic{width:1.1em;height:1.1em;stroke-width:2.6}
-.trip-next{display:grid;place-items:center;line-height:0}
-.trip-next .ic{width:24px;height:24px}
-.person-icon .ic{width:30px;height:30px}
-.timeline-point .ic{width:20px;height:20px;stroke-width:3}
-.role-heading{justify-content:flex-start}
-.role-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;width:100%;max-width:520px;padding:4px;border-radius:16px;background:#e9f1ec;margin-top:8px}
-.role-tabs button{min-height:50px;border:0;border-radius:12px;background:transparent;color:#3f6150;font-weight:850;font-size:.85rem}
-.role-tabs button.on{background:#145540;color:#fff;box-shadow:0 4px 12px rgba(20,85,64,.22)}
-.role-switch-card .role-tabs{max-width:none;margin-top:16px}
-dialog.modal{max-width:calc(100vw - 24px);margin:auto;inset:0}
-@media(max-width:640px){
- dialog.modal,dialog.modal.font-modal{position:fixed;inset:auto 0 0 0;margin:0;width:100%;max-width:100%;max-height:92dvh;border-radius:24px 24px 0 0}
- .modal-head h2{font-size:clamp(26px,1.25rem,40px);min-width:0;overflow-wrap:anywhere}
- .destination{min-height:0;padding:20px 18px}
- .destination-icon .ic{width:26px;height:26px}
-}
