@@ -47,10 +47,15 @@ const cpVoice = (() => {
 // 從一句話解析長期預約欄位。只填入有聽到的項目，其餘欄位保持原值。
 function cpParseBookingText(text){
   const out = {};
+  // 先取出上車地址，並從句子中移除，避免地址裡的字被誤認成醫院或科別。
+  const pick = cpFindPickup(text);
+  if(pick){ out.pickup = cpPlaceInfo(pick.place); text = text.replace(pick.raw, ' '); }
+  const other = cpFindHospitalWord(text);
+  if(other && !cpMatchHospital(other)) out.unknownHospital = other;
   const dayMap = {'一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'日':0,'天':0};
   const m = text.match(/(?:每週|每周|每星期|星期|禮拜|週|周)([一二三四五六日天、,，和及與\s]+)/);
   if(m){ const days = [...new Set([...m[1]].filter(c => c in dayMap).map(c => dayMap[c]))]; if(days.length) out.weekdays = days; }
-  const h = CP_HOSPITALS.find(x => text.includes(x.name)) || (text.includes('台大') || text.includes('臺大') ? cpHospital('ntuh') : /馬偕/.test(text) ? cpHospital('mackay') : /中榮|台中榮|臺中榮/.test(text) ? cpHospital('tcvgh') : /苗栗/.test(text) ? cpHospital('mlh') : null);
+  const h = cpMatchHospital(text);
   if(h) out.hospitalId = h.id;
   const dept = text.match(/([一-龥]{1,4}(?:內科|外科|科))/); if(dept) out.department = dept[1].replace(/^(醫院|台大|臺大)/,'');
   const room = text.match(/(\d{1,2}|[一二三四五六七八九十]{1,2})\s*診/); if(room) out.clinicRoom = `${cpCnNum(room[1])} 診`;
@@ -102,13 +107,57 @@ function cpParseDate(text){
   }
   return null;
 }
-// 單次叫車：解析方向、醫院、日期、時間與車輛需求。只回傳有聽到的項目。
+// 地點解析共用：遇到日期、時間、車輛需求或標點就停止，剩下的文字就是地點。
+const CP_PLACE_STOP = /(今天|明天|後天|大後天|明早|今早|下下?[週周]|星期|禮拜|[週周][一二三四五六日天]|[0-9一二三四五六七八九十]{1,3}\s*月\s*[0-9一二三四五六七八九十]{1,3}\s*[日號号]|凌晨|早上|上午|中午|下午|傍晚|晚上|[零〇一二兩三四五六七八九十0-9]{1,3}\s*[點:：]|現在|馬上|要輪椅|需要輪椅|不用輪椅|不要輪椅|不需要輪椅|輪椅|無障礙|一般車|普通車|看診|回診|拿藥|看病|復健|洗腎|透析|出發|上車|然後|預約|每[週周]|[，,。.、！!？?；;])/;
+function cpCleanPlace(s){
+  if(!s) return '';
+  const i = s.search(CP_PLACE_STOP);
+  let p = (i >= 0 ? s.slice(0, i) : s).trim();
+  p = p.replace(/^(我要|我想|想要|要|我|在|的)+/, '').replace(/(這裡|那裡|這邊|那邊|那)$/, '').trim();
+  return p.length >= 1 && p.length <= 60 ? p : '';
+}
+function cpMatchHospital(text){
+  return CP_HOSPITALS.find(x => text.includes(x.name)) || (/台大|臺大/.test(text) ? cpHospital('ntuh') : /馬偕/.test(text) ? cpHospital('mackay') : /中榮|台中榮|臺中榮/.test(text) ? cpHospital('tcvgh') : /苗栗醫院/.test(text) ? cpHospital('mlh') : null);
+}
+// 句子裡看起來像院所名稱的詞（例如「為恭醫院」），用來提示清單中沒有的醫院。
+function cpFindHospitalWord(text){
+  const suffix = '(?:醫院|醫學中心|診所|醫療中心|榮總)';
+  const m = text.match(new RegExp(`(?:去|到|前往|在)\\s*([^，,。去到在\\s]{1,12}?${suffix})`)) || text.match(new RegExp(`([一-龥A-Za-z0-9]{2,4}${suffix})`));
+  return m ? m[1] : '';
+}
+// 取出上車地點：「從 X」「在 X 上車」「上車地址是 X」。
+function cpFindPickup(text){
+  const pats = [/(?:上車地址|接送地址|上車地點|地址)\s*(?:是|在|為|：|:)?\s*([^，,。]+)/, /在\s*([^，,。]+?)\s*上車/, /從\s*(.+?)(?=去|到|前往|回家|回去|出發|上車|[，,。]|$)/];
+  for(const re of pats){ const m = text.match(re); if(m){ const place = cpCleanPlace(m[1]); if(place) return {raw:m[0], place}; } }
+  return null;
+}
+// 把地點分成住家、清單中的醫院、或照原文填入的地址。
+function cpPlaceInfo(p){
+  if(/^(家|家裡|家里|住家|我家|自己家|自己的家)$/.test(p)) return {kind:'home', text:p};
+  const h = cpMatchHospital(p);
+  if(h && p.length <= h.name.length + 4) return {kind:'hospital', hospitalId:h.id, text:p};
+  return {kind:'text', text:p};
+}
+
+// 單次叫車：解析方向、上下車地點、日期、時間與車輛需求。只回傳有聽到的項目。
 function cpParseRideText(text){
   const out = {};
-  const h = CP_HOSPITALS.find(x => text.includes(x.name)) || (/台大|臺大/.test(text) ? cpHospital('ntuh') : /馬偕/.test(text) ? cpHospital('mackay') : /中榮|台中榮|臺中榮/.test(text) ? cpHospital('tcvgh') : /苗栗醫院/.test(text) ? cpHospital('mlh') : null);
-  if(h) out.hospitalId = h.id;
-  if(/回家|回去|返家|到家/.test(text) && !/去.{0,8}(醫院|看診|回診)/.test(text.replace(/回家.*$/, ''))) out.direction = 'return';
-  else if(h || /醫院|看診|回診|診所/.test(text)) out.direction = 'outbound';
+  // 地點：「從 A」是上車地點，「去／到／前往 B」是目的地，「回家」的目的地是住家。
+  const pick = cpFindPickup(text);
+  if(pick) out.pickup = cpPlaceInfo(pick.place);
+  const rest = pick ? text.slice(text.indexOf(pick.raw) + pick.raw.length) : text;
+  const goHome = /回家|回去|返家|到家/.test(text);
+  const dm = rest.match(/(?:^|[^回])(?:去|到|前往)\s*(.+)$/);
+  const destPlace = dm ? cpCleanPlace(dm[1]) : '';
+  if(destPlace) out.destination = cpPlaceInfo(destPlace);
+  else if(goHome) out.destination = {kind:'home'};
+  if(out.destination && out.destination.kind === 'home') out.direction = 'return';
+  else if(out.destination) out.direction = 'outbound';
+  else if(goHome) out.direction = 'return';
+  else if(/醫院|看診|回診|診所/.test(text)) out.direction = 'outbound';
+  let timeText = text;
+  for(const raw of [pick && pick.place, destPlace]) if(raw) timeText = timeText.replace(raw, ' ');
+  text = timeText;
   const date = cpParseDate(text); if(date) out.date = date;
   const time = cpParseTime(text);
   if(time) out.time = time;

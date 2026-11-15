@@ -253,6 +253,23 @@ function expectedDates(start, days, len){
   await p.click('[data-cpa="ride-voice-apply"]'); await p.waitForTimeout(150);
   const rt = await p.evaluate(() => ({pickup:$('ride-pickup').value, dest:$('ride-destination').value, date:$('ride-date').value, time:$('ride-time').value, wheel:$('ride-wheel').checked, dir:currentDirection, back:$('return-button').getAttribute('aria-pressed'), d2:cpAddDays(cpToday(), 2), res:$('ride-voice-result').innerText}));
   check('補充', '單次叫車文字：解析回家、馬偕乘車處、後天 14:30、一般車', rt.dir === 'return' && rt.back === 'true' && rt.pickup === '馬偕醫院中山北路大門乘車處' && rt.dest === '台北市大安區和平東路二段 100 號' && rt.date === rt.d2 && rt.time === '14:30' && !rt.wheel && !/模擬/.test(rt.res), JSON.stringify(rt));
+  await p.click('[data-cpa="voice-ride"]'); await p.waitForTimeout(300);
+  await p.fill('#ride-voice-input', '從苗栗市中正路100號去為恭醫院看診，明天上午十點');
+  await p.click('[data-cpa="ride-voice-apply"]'); await p.waitForTimeout(150);
+  const ra = await p.evaluate(() => ({pickup:$('ride-pickup').value, dest:$('ride-destination').value, date:$('ride-date').value, time:$('ride-time').value, dir:currentDirection, d1:cpAddDays(cpToday(), 1), res:$('ride-voice-result').innerText}));
+  check('補充', '單次叫車語音地址：清單外的地址與院所照聽到的文字填入上車與目的地', ra.dir === 'outbound' && ra.pickup === '苗栗市中正路100號' && ra.dest === '為恭醫院' && ra.date === ra.d1 && ra.time === '10:00' && /請確認門牌/.test(ra.res), JSON.stringify(ra));
+  await p.click('#ride-dialog [data-action="close-dialog"] >> nth=0'); await p.waitForTimeout(150);
+  await p.click('#page-home [data-cpa="open-booking"]'); await p.waitForTimeout(200);
+  await p.click('[data-cpa="voice-booking"]'); await p.waitForTimeout(300);
+  await p.fill('#cp-voice-input', '每週二四早上八點去台大醫院，從苗栗市中正路100號出發');
+  await p.click('[data-cpa="voice-text-apply"]'); await p.waitForTimeout(150);
+  const ba = await p.evaluate(() => ({pickup:$('cp-pickup').value, h:$('cp-hospital').value, days:[...document.querySelectorAll('.cp-day.on')].map(b => b.dataset.day).join(), time:$('cp-time').value, dept:$('cp-dept').value}));
+  check('補充', '長期預約語音地址：上車地址填入，地址中的「苗栗」不會被誤認成醫院', ba.pickup === '苗栗市中正路100號' && ba.h === 'ntuh' && ba.days === '2,4' && ba.time === '08:00' && ba.dept === '腎臟內科', JSON.stringify(ba));
+  await p.click('[data-cpa="voice-booking"]'); await p.waitForTimeout(300);
+  await p.fill('#cp-voice-input', '每週三下午兩點去為恭醫院復健科，從家裡出發');
+  await p.click('[data-cpa="voice-text-apply"]'); await p.waitForTimeout(150);
+  const bb2 = await p.evaluate(() => ({pickup:$('cp-pickup').value, res:$('cp-voice-result').innerText}));
+  check('補充', '長期預約語音：「從家裡」填入住家地址，清單外醫院會提示改用選單', bb2.pickup === '台北市大安區和平東路二段 100 號' && /醫院選單目前沒有「為恭醫院」/.test(bb2.res), JSON.stringify(bb2));
   await p.close();
 
   // ---------- 12 司機轉單 ----------

@@ -111,13 +111,20 @@ function cpApplyParsed(p){
   cpRenderDays(); cpRenderPreview();
 }
 function cpShowVoiceResult(text, simulated){
-  const p = cpParseBookingText(text), items = [];
+  const p = cpParseBookingText(text), items = [], notes = [];
+  if(p.pickup){
+    const home = state.preferences.homeAddress || '';
+    const v = p.pickup.kind === 'home' ? home : p.pickup.kind === 'hospital' ? `${cpHospital(p.pickup.hospitalId).name}（${cpHospital(p.pickup.hospitalId).address}）` : p.pickup.text;
+    if(v){ $('cp-pickup').value = v; items.push(`上車地址：${v}`); } else notes.push('還沒有設定住家地址，請直接輸入上車地址');
+    if(p.pickup.kind === 'text') notes.push('上車地址是照聽到的文字填入，請確認門牌是否正確');
+  }
+  if(p.unknownHospital && !p.hospitalId) notes.push(`醫院選單目前沒有「${p.unknownHospital}」，請從醫院欄位選擇`);
   if(p.weekdays) items.push(cpWeekdaysLabel(p.weekdays)); if(p.hospitalId) items.push(cpHospital(p.hospitalId).name);
   if(p.department) items.push(p.department); if(p.clinicRoom) items.push(p.clinicRoom); if(p.appointmentTime) items.push(p.appointmentTime);
   if(p.duration) items.push(CP_DURATIONS[p.duration]); if(p.wheelchairRequired) items.push('無障礙輪椅車輛：開啟'); if(p.queueMode === 'treatment') items.push('固定時長療程');
   cpApplyParsed(p);
   const box = $('cp-voice-result');
-  box.innerHTML = `<p class="cp-voice-heard">${simulated ? '<span class="cp-pill">模擬語音辨識</span>' : ''}辨識結果：「${esc(text)}」</p>${items.length ? `<p>已填入：${items.map(esc).join('、')}</p><p class="help-text">請確認下方欄位，不正確可以直接修改。</p>` : '<p>沒有找到可以填入的內容，請直接修改下方欄位。</p>'}`;
+  box.innerHTML = `<p class="cp-voice-heard">${simulated ? '<span class="cp-pill">模擬語音辨識</span>' : ''}辨識結果：「${esc(text)}」</p>${items.length ? `<p>已填入：${items.map(esc).join('、')}</p>` : '<p>沒有找到可以填入的內容，請直接修改下方欄位。</p>'}${notes.map(n => `<p class="cp-voice-note">${esc(n)}</p>`).join('')}${items.length ? '<p class="help-text">請確認下方欄位，不正確可以直接修改。</p>' : ''}`;
   box.hidden = false; $('cp-voice-fallback').hidden = true;
 }
 function cpVoiceBookingFail(reason){
@@ -128,20 +135,22 @@ function cpVoiceBookingFail(reason){
 
 // ---------- 單次叫車的語音輸入 ----------
 function cpShowRideVoice(text, simulated){
-  const p = cpParseRideText(text), items = [], home = state.preferences.homeAddress || '';
+  const p = cpParseRideText(text), items = [], notes = [], home = state.preferences.homeAddress || '';
   if(p.direction){ updateDirection(p.direction); items.push(p.direction === 'return' ? '回家' : '去醫院'); }
   const dir = currentDirection;
-  if(p.hospitalId){
-    const h = cpHospital(p.hospitalId);
-    if(dir === 'return'){ $('ride-pickup').value = h.pickupPoint; if(home) $('ride-destination').value = home; }
-    else { $('ride-destination').value = `${h.name}（${h.address}）`; if(home && !$('ride-pickup').value) $('ride-pickup').value = home; }
-    items.push(h.name);
-  }
+  const placeValue = (info, role) => {
+    if(info.kind === 'home'){ if(!home) notes.push('還沒有設定住家地址，請在「設定」填寫或直接輸入'); return home; }
+    if(info.kind === 'hospital'){ const h = cpHospital(info.hospitalId); return role === 'pickup' && dir === 'return' ? h.pickupPoint : `${h.name}（${h.address}）`; }
+    return info.text;
+  };
+  if(p.pickup){ const v = placeValue(p.pickup, 'pickup'); if(v){ $('ride-pickup').value = v; items.push(`上車：${v}`); } }
+  if(p.destination){ const v = placeValue(p.destination, 'destination'); if(v){ $('ride-destination').value = v; items.push(`目的地：${v}`); } }
+  if(p.pickup && p.pickup.kind === 'text' || p.destination && p.destination.kind === 'text') notes.push('地點是照聽到的文字填入，請確認門牌是否正確');
   if(p.date){ $('ride-date').value = p.date; items.push(cpShortDate(p.date)); }
   if(p.time){ $('ride-time').value = p.time; items.push(p.time); }
   if(p.wheelchair !== undefined){ $('ride-wheel').checked = p.wheelchair; items.push(p.wheelchair ? '無障礙輪椅車輛' : '一般車輛'); }
   const box = $('ride-voice-result');
-  box.innerHTML = `<p class="cp-voice-heard">${simulated ? '<span class="cp-pill">模擬語音辨識</span>' : ''}辨識結果：「${esc(text)}」</p>${items.length ? `<p>已填入：${items.map(esc).join('、')}</p><p class="help-text">請確認下方欄位，沒問題再按「送出叫車」。</p>` : '<p>沒有找到可以填入的內容，請直接修改下方欄位。</p>'}`;
+  box.innerHTML = `<p class="cp-voice-heard">${simulated ? '<span class="cp-pill">模擬語音辨識</span>' : ''}辨識結果：「${esc(text)}」</p>${items.length ? `<p>已填入：${items.map(esc).join('、')}</p>${notes.map(n => `<p class="cp-voice-note">${esc(n)}</p>`).join('')}<p class="help-text">請確認下方欄位，沒問題再按「送出叫車」。</p>` : '<p>沒有找到可以填入的內容，請直接修改下方欄位。</p>'}`;
   box.hidden = false; $('ride-voice-fallback').hidden = true;
 }
 function cpRideVoiceFail(reason){
