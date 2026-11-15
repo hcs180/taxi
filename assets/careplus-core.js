@@ -368,7 +368,7 @@ const cpEvents = {
     }, '已登記回程需求，尚未叫車');
   },
   unregisterReturn(){ cpApply(s => { const a = cpFocus(s), rr = a && cpReturnOf(s, a.id); if(rr && !rr.rideId) rr.interestRegistered = false; }, '已取消回程登記'); },
-  requestReturn(source){
+  requestReturn(source, override){
     let created = false;
     cpApply(s => {
       const a = cpEnsureFocus(s); if(!a) throw Error('目前沒有回診行程');
@@ -384,7 +384,7 @@ const cpEvents = {
       }
       const h = cpHospital(a.hospitalId);
       const ride = cpNewRide(s, {kind:'return', direction:'return', appointmentId:a.id, requestId:rr.id, date:a.date, time:cpFmt(q.observationTime),
-        pickup:h.pickupPoint, destination:b ? b.pickupAddress : (s.preferences.homeAddress || '住家'), wheelchair:rr.wheelchairRequired,
+        pickup:(override && override.pickup) || h.pickupPoint, destination:(override && override.destination) || (b ? b.pickupAddress : (s.preferences.homeAddress || '住家')), wheelchair:rr.wheelchairRequired,
         passengerState:q.phase === 'done' ? (q.mode === 'opd' ? '已完成看診' : '已完成療程') : '尚未完成看診'});
       rr.rideId = ride.id; rr.requestedAt = cpNowIso(); rr.history.push({status:'REQUESTED', at:rr.requestedAt}); created = true;
       cpLog(s, 'request', source === 'voice' ? '已用語音發起回程叫車' : '已發起回程叫車', a.id);

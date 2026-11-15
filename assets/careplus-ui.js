@@ -144,6 +144,45 @@ function cpVoiceBookingFail(reason){
   box.hidden = false; $('cp-voice-result').hidden = true; $('cp-voice-input').focus();
 }
 
+// ---------- 我要回家：只確認上車地點與回家地址，按下就叫車 ----------
+let cpGoHome = {mode:'single', wheel:false};
+function cpOpenGoHome(){
+  const active = state.rides.find(r => r.direction === 'return' && isRideActive(r));
+  if(active){ selectedRideId = active.id; toast('回程叫車已在進行中'); setView('tracking'); return; }
+  const c = cpCtx(), today = nowTaipei().date, booking = cpActiveBooking(state);
+  const careplus = Boolean(c.a && c.q && c.q.phase !== 'before' && c.a.status !== 'completed' && c.rr && !['MATCH_FAILED'].includes(c.rr.status));
+  let pickup = '', home = (booking && booking.pickupAddress) || state.preferences.homeAddress || '';
+  if(careplus){ pickup = c.h.pickupPoint; home = (c.b && c.b.pickupAddress) || home; }
+  else {
+    const appt = state.appointments.find(a => a.date === today && !['cancelled','paused'].includes(a.status));
+    const lastOut = [...state.rides].reverse().find(r => r.direction === 'outbound' && r.date === today && r.status !== 'cancelled');
+    pickup = appt ? (appt.recurringBookingId ? cpHospital(appt.hospitalId).pickupPoint : (appt.address || appt.hospital)) : lastOut ? lastOut.destination : '';
+  }
+  cpGoHome = {mode:careplus ? 'careplus' : 'single', wheel:Boolean(booking && booking.wheelchairRequired)};
+  $('cp-gohome-form').reset(); clearError('gh-error');
+  $('gh-pickup').value = pickup; $('gh-home').value = home;
+  $('gh-note').textContent = careplus ? `${c.h.name}${c.q.phase === 'done' ? '看診已完成' : '看完了嗎？'}按下就馬上叫車，家屬端同步更新` : '按下就馬上叫車，家屬端同步更新';
+  openDialog('cp-gohome-dialog');
+  if(!pickup) setTimeout(() => $('gh-pickup').focus(), 50);
+}
+$('cp-gohome-form').addEventListener('submit', e => {
+  e.preventDefault(); clearError('gh-error');
+  const pickup = $('gh-pickup').value.trim(), home = $('gh-home').value.trim();
+  if(!pickup){ showError('gh-error', '請輸入上車地點，或按「選擇附近醫院」'); return; }
+  if(!home){ showError('gh-error', '請輸入回家地址'); return; }
+  try{
+    if(cpGoHome.mode === 'careplus'){
+      cpEvents.requestReturn('tap', {pickup, destination:home});
+      closeDialog($('cp-gohome-dialog')); setView('home');
+    } else {
+      const n = nowTaipei();
+      selectedRideId = cpEvents.requestSingleRide({direction:'return', appointmentId:null, date:n.date, time:n.time, pickup, destination:home, wheelchair:cpGoHome.wheel});
+      closeDialog($('cp-gohome-dialog')); setView('tracking');
+    }
+    cpTapGuard = Date.now() + 800;
+  }catch(err){ showError('gh-error', err.message); }
+});
+
 // ---------- 單次叫車的語音輸入 ----------
 function cpShowRideVoice(text, simulated){
   const p = cpParseRideText(text), items = [], notes = [], home = state.preferences.homeAddress || '';
@@ -419,7 +458,7 @@ document.addEventListener('click', ev => {
     switch(a){
       case 'open-visit': if(!state.careplus.focusAppointmentId && cpNextAppointment(state)) cpEvents.focus(cpNextAppointment(state).id); setView('visit'); break;
       case 'open-booking': if(cpActiveBooking(state)) setView('booking'); else cpOpenBookingForm(); break;
-      case 'go-home': { const c = cpCtx(); if(c.q && c.q.phase !== 'before' && c.a && c.a.status !== 'completed'){ setView('visit'); requestAnimationFrame(() => { const el = document.querySelector('.cp-return'); if(el) el.scrollIntoView({block:'start'}); }); } else openRide('return'); break; }
+      case 'go-home': cpOpenGoHome(); break;
       case 'open-booking-form': cpOpenBookingForm(id); break;
       case 'toggle-day': { const d = Number(btn.dataset.day); cpDraftDays = cpDraftDays.includes(d) ? cpDraftDays.filter(x => x !== d) : [...cpDraftDays, d]; cpRenderDays(); cpRenderPreview(); break; }
       case 'voice-booking': cpVoice.listen({lang:'zh', prompt:'請說出回診需求', simulatedText:'每週一三五早上九點去台大醫院腎臟內科三診，預約一個月，要輪椅車', onResult:cpShowVoiceResult, onFail:cpVoiceBookingFail}); break;

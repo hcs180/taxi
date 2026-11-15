@@ -353,7 +353,7 @@ function shareLocation(){
  },()=>toast('無法取得位置，請檢查定位權限'),{enableHighAccuracy:false,timeout:9000,maximumAge:30000});
 }
 function openHospitalPicker(target){
- hospitalTarget=['appointment','ride-pickup','ride-destination'].includes(target)?target:'appointment';
+ hospitalTarget=['appointment','ride-pickup','ride-destination','gh-pickup'].includes(target)?target:'appointment';
  hospitalCandidates=[...demoHospitals];
  $('hospital-query').value='';
  $('hospital-status').textContent='常用院所。按「使用目前位置」可搜尋附近院所。';

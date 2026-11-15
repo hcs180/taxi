@@ -275,6 +275,32 @@ function expectedDates(start, days, len){
   check('補充', '長期預約語音：「從家裡」填入住家地址，清單外醫院會提示改用選單', bb2.pickup === '台北市大安區和平東路二段 100 號' && /醫院選單目前沒有「為恭醫院」/.test(bb2.res), JSON.stringify(bb2));
   await p.close();
 
+  // ---------- 補充：首頁「我要回家」只確認地點就叫車 ----------
+  p = await newPage(browser, '?demo&simvoice');
+  await demo(p, 'load'); await demo(p, 'arrive');
+  await p.click('.bottom-nav [data-view="home"]');
+  await p.click('#page-home [data-cpa="go-home"]'); await p.waitForTimeout(200);
+  const gh = await p.evaluate(() => ({open:$('cp-gohome-dialog').open, pickup:$('gh-pickup').value, home:$('gh-home').value, fields:[...document.querySelectorAll('#cp-gohome-form input')].length}));
+  check('補充', '我要回家：只顯示上車地點與回家地址兩欄，已自動帶入', gh.open && gh.fields === 2 && gh.pickup === '台大醫院常德街大門乘車處' && gh.home === '台北市大安區和平東路二段 100 號', JSON.stringify(gh));
+  await p.click('#cp-gohome-form button[type="submit"]'); await p.waitForTimeout(900);
+  s = await S(p);
+  check('補充', '我要回家：確認後直接建立回程叫車並同步回程狀態', s.rides.length === 1 && s.rides[0].kind === 'return' && s.rides[0].status === 'requested' && s.careplus.returnRequests[0].status === 'MATCHING' && !(await p.evaluate(() => $('cp-gohome-dialog').open)));
+  await p.click('#page-home [data-cpa="go-home"]'); await p.waitForTimeout(200);
+  s = await S(p);
+  check('補充', '我要回家：已有回程叫車時不再重複建立，改看叫車狀態', s.rides.length === 1 && (await p.evaluate(() => document.documentElement.dataset.view)) === 'tracking' && !(await p.evaluate(() => $('cp-gohome-dialog').open)));
+  await p.close();
+  p = await newPage(browser, '?demo&simvoice');
+  await demo(p, 'reset');
+  await p.click('#page-home [data-cpa="go-home"]'); await p.waitForTimeout(200);
+  const gh2 = await p.evaluate(() => ({pickup:$('gh-pickup').value, home:$('gh-home').value}));
+  await p.click('#cp-gohome-form button[type="submit"]'); await p.waitForTimeout(200);
+  const ghErr = await txt(p, '#gh-error');
+  await p.fill('#gh-pickup', '苗栗市為公路 747 號');
+  await p.click('#cp-gohome-form button[type="submit"]'); await p.waitForTimeout(900);
+  s = await S(p);
+  check('補充', '我要回家（沒有回診行程）：住家自動帶入，補上上車地點即可馬上叫車', gh2.pickup === '' && gh2.home === '台北市大安區和平東路二段 100 號' && /請輸入上車地點/.test(ghErr) && s.rides.length === 1 && s.rides[0].direction === 'return' && s.rides[0].pickup === '苗栗市為公路 747 號' && (await p.evaluate(() => document.documentElement.dataset.view)) === 'tracking', JSON.stringify(gh2));
+  await p.close();
+
   // ---------- 12 司機轉單 ----------
   p = await newPage(browser, '?demo&simvoice');
   await demo(p, 'load'); await demo(p, 'arrive'); await demo(p, 'done');

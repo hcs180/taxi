@@ -33,6 +33,8 @@
 .cp-autofill-list>div{display:grid;grid-template-columns:2.6em 1fr;gap:8px;align-items:baseline}
 .cp-autofill-list dt{font-size:.72rem;font-weight:800;color:#5d7266}
 .cp-autofill-list dd{margin:0;font-size:.82rem;font-weight:750;color:#173f31;overflow-wrap:anywhere}
+.cp-gh-note{font-size:.8rem;font-weight:750;color:#1d6a4b;background:#f1f8f3;border-radius:12px;padding:10px 12px;margin:0 0 4px}
+#cp-gohome-form .cp-onetap{margin:10px 0 10px}
 .cp-route{font-size:.78rem!important;font-weight:750;color:#2d5a46!important;margin-top:6px!important;overflow-wrap:anywhere}
 .cp-speak{margin-top:10px;display:flex;align-items:center;justify-content:center}
 .cp-speak .ic{width:1.15em;height:1.15em}

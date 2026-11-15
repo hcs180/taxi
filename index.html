@@ -6,14 +6,14 @@
   <meta name="theme-color" content="#164b40">
   <meta name="description" content="yoxi Care+：高齡者規律回診交通服務。一次設定固定回診、依看診進度建議出門時間、看完診一鍵叫車。">
   <title>yoxi Care+｜規律回診交通服務</title>
-  <link rel="stylesheet" href="./assets/style.css?v=2611g">
-  <link rel="stylesheet" href="./assets/ui.css?v=2611g">
-  <link rel="stylesheet" href="./assets/careplus.css?v=2611g">
-  <script src="./assets/app.js?v=2611g" defer></script>
-  <script src="./assets/careplus-core.js?v=2611g" defer></script>
-  <script src="./assets/careplus-voice.js?v=2611g" defer></script>
-  <script src="./assets/careplus-ui.js?v=2611g" defer></script>
-  <script src="./assets/careplus-demo.js?v=2611g" defer></script>
+  <link rel="stylesheet" href="./assets/style.css?v=2611h">
+  <link rel="stylesheet" href="./assets/ui.css?v=2611h">
+  <link rel="stylesheet" href="./assets/careplus.css?v=2611h">
+  <script src="./assets/app.js?v=2611h" defer></script>
+  <script src="./assets/careplus-core.js?v=2611h" defer></script>
+  <script src="./assets/careplus-voice.js?v=2611h" defer></script>
+  <script src="./assets/careplus-ui.js?v=2611h" defer></script>
+  <script src="./assets/careplus-demo.js?v=2611h" defer></script>
 </head>
 <body>
 <svg class="sprite" aria-hidden="true" focusable="false" width="0" height="0" style="position:absolute;width:0;height:0;overflow:hidden"><defs>
@@ -35,7 +35,7 @@
 <a class="skip" href="#main">跳至主要內容</a>
 <div class="app-shell">
   <header class="topbar">
-    <a class="brand" href="./" aria-label="yoxi Care+ 首頁"><img class="brand-logo" src="./assets/yoxi-logo.png?v=2611g" alt="yoxi" width="341" height="97"><strong>Care+</strong></a>
+    <a class="brand" href="./" aria-label="yoxi Care+ 首頁"><img class="brand-logo" src="./assets/yoxi-logo.png?v=2611h" alt="yoxi" width="341" height="97"><strong>Care+</strong></a>
     <button type="button" class="font-button" id="font-toggle" data-action="open-font-dialog" aria-haspopup="dialog" aria-controls="font-dialog">字體：一般</button>
   </header>
 
@@ -47,7 +47,7 @@
         <button type="button" class="destination primary" data-action="open-ride" data-direction="outbound"><span class="destination-icon" aria-hidden="true"><svg class="ic" aria-hidden="true" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg></span><span>我要去醫院<small>安排這一趟去程</small></span><span class="arrow" aria-hidden="true"><svg class="ic" aria-hidden="true" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-right"/></svg></span></button>
         <button type="button" class="destination secondary" data-cpa="open-visit"><span class="destination-icon" aria-hidden="true"><svg class="ic" aria-hidden="true" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-clock"/></svg></span><span>看診當天進度<small id="cp-visit-sub">燈號與建議出門時間</small></span><span class="arrow" aria-hidden="true"><svg class="ic" aria-hidden="true" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-right"/></svg></span></button>
         <button type="button" class="destination secondary" data-cpa="open-booking"><span class="destination-icon" aria-hidden="true"><svg class="ic" aria-hidden="true" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-calendar"/></svg></span><span><span id="cp-booking-title">設定長期預約</span><small id="cp-booking-sub">一次排好固定回診的去程</small></span><span class="arrow" aria-hidden="true"><svg class="ic" aria-hidden="true" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-right"/></svg></span></button>
-        <button type="button" class="destination secondary" data-cpa="go-home"><span class="destination-icon" aria-hidden="true"><svg class="ic" aria-hidden="true" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-home"/></svg></span><span>我要回家<small>看完診一鍵叫車</small></span><span class="arrow" aria-hidden="true"><svg class="ic" aria-hidden="true" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-right"/></svg></span></button>
+        <button type="button" class="destination secondary" data-cpa="go-home"><span class="destination-icon" aria-hidden="true"><svg class="ic" aria-hidden="true" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-home"/></svg></span><span>我要回家<small>確認地點，馬上叫車</small></span><span class="arrow" aria-hidden="true"><svg class="ic" aria-hidden="true" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-right"/></svg></span></button>
       </div>
       <section class="card" aria-labelledby="next-heading"><div class="section-heading"><h2 id="next-heading">下一次回診</h2><button type="button" class="small-link" data-view="appointments">全部回診</button></div><div id="home-next" aria-live="polite"></div></section>
       <section class="card" aria-labelledby="ride-heading"><div class="section-heading"><h2 id="ride-heading">最近的用車</h2><button type="button" class="small-link" data-view="rides">用車紀錄</button></div><div id="home-ride" aria-live="polite"></div></section>
@@ -212,6 +212,18 @@
     <div id="cp-preview" class="cp-preview" aria-live="polite"></div>
     <p class="form-error" id="cp-error" role="alert" hidden></p>
     <button class="btn primary full submit-btn" type="submit" id="cp-lt-submit">確認長期預約</button><button type="button" class="btn ghost full" data-action="close-dialog">先不設定</button>
+  </form>
+</dialog>
+<dialog class="modal" id="cp-gohome-dialog" aria-labelledby="gh-title">
+  <form id="cp-gohome-form" novalidate>
+    <div class="modal-head"><h2 id="gh-title">叫車回家</h2><button type="button" class="close-button" data-action="close-dialog" aria-label="關閉叫車回家視窗">關閉</button></div>
+    <p class="modal-sub">只要確認上車地點和回家地址，不用填其他資料。</p>
+    <div class="field"><label for="gh-pickup">從哪裡上車</label><input id="gh-pickup" type="text" maxlength="120" placeholder="例如：台大醫院常德街大門乘車處"><button type="button" class="quick-select" data-action="open-hospitals" data-target="gh-pickup">選擇附近醫院</button></div>
+    <div class="field"><label for="gh-home">回家地址</label><input id="gh-home" type="text" maxlength="120" autocomplete="street-address" placeholder="例如：台北市大安區○○路 12 號"></div>
+    <p class="cp-gh-note" id="gh-note"></p>
+    <p class="form-error" id="gh-error" role="alert" hidden></p>
+    <button class="cp-onetap" type="submit">確認，馬上叫車</button>
+    <button type="button" class="btn ghost full" data-action="close-dialog">先不叫車</button>
   </form>
 </dialog>
 <div id="cp-push" class="cp-push" role="alertdialog" aria-label="提醒通知" hidden></div>
