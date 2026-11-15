@@ -126,6 +126,29 @@ function cpVoiceBookingFail(reason){
   box.hidden = false; $('cp-voice-result').hidden = true; $('cp-voice-input').focus();
 }
 
+// ---------- 單次叫車的語音輸入 ----------
+function cpShowRideVoice(text, simulated){
+  const p = cpParseRideText(text), items = [], home = state.preferences.homeAddress || '';
+  if(p.direction){ updateDirection(p.direction); items.push(p.direction === 'return' ? '回家' : '去醫院'); }
+  const dir = currentDirection;
+  if(p.hospitalId){
+    const h = cpHospital(p.hospitalId);
+    if(dir === 'return'){ $('ride-pickup').value = h.pickupPoint; if(home) $('ride-destination').value = home; }
+    else { $('ride-destination').value = `${h.name}（${h.address}）`; if(home && !$('ride-pickup').value) $('ride-pickup').value = home; }
+    items.push(h.name);
+  }
+  if(p.date){ $('ride-date').value = p.date; items.push(cpShortDate(p.date)); }
+  if(p.time){ $('ride-time').value = p.time; items.push(p.time); }
+  if(p.wheelchair !== undefined){ $('ride-wheel').checked = p.wheelchair; items.push(p.wheelchair ? '無障礙輪椅車輛' : '一般車輛'); }
+  const box = $('ride-voice-result');
+  box.innerHTML = `<p class="cp-voice-heard">${simulated ? '<span class="cp-pill">模擬語音辨識</span>' : ''}辨識結果：「${esc(text)}」</p>${items.length ? `<p>已填入：${items.map(esc).join('、')}</p><p class="help-text">請確認下方欄位，沒問題再按「送出叫車」。</p>` : '<p>沒有找到可以填入的內容，請直接修改下方欄位。</p>'}`;
+  box.hidden = false; $('ride-voice-fallback').hidden = true;
+}
+function cpRideVoiceFail(reason){
+  $('ride-voice-fallback-msg').textContent = `${cpVoice.failText(reason)}，請改用文字輸入，例如：明天早上八點半去台大醫院`;
+  $('ride-voice-fallback').hidden = false; $('ride-voice-result').hidden = true; $('ride-voice-input').focus();
+}
+
 // ---------- 長期預約頁 ----------
 function cpRenderBooking(){
   const box = $('cp-booking'); if(!box) return;
@@ -379,6 +402,8 @@ document.addEventListener('click', ev => {
       case 'voice-booking': cpVoice.listen({lang:'zh', prompt:'請說出回診需求', simulatedText:'每週一三五早上九點去台大醫院腎臟內科三診，預約一個月，要輪椅車', onResult:cpShowVoiceResult, onFail:cpVoiceBookingFail}); break;
       case 'voice-text-apply': { const t = $('cp-voice-input').value.trim(); if(!t) throw Error('請先輸入內容'); cpShowVoiceResult(t, false); break; }
       case 'voice-stop': cpVoice.close(); break;
+      case 'voice-ride': cpVoice.listen({lang:'zh', prompt:'請說出要去哪裡、哪一天、幾點', simulatedText:'明天早上八點半從家裡去台大醫院，要輪椅車', onResult:cpShowRideVoice, onFail:cpRideVoiceFail}); break;
+      case 'ride-voice-apply': { const t = $('ride-voice-input').value.trim(); if(!t) throw Error('請先輸入內容'); cpShowRideVoice(t, false); break; }
       case 'cancel-booking': cpConfirm('取消長期預約？', '尚未執行的去程安排都會取消，已完成的紀錄會保留。', '確認取消', () => cpEvents.cancelBooking(id)); break;
       case 'pause-appt': cpEvents.pauseAppointment(id, true); break;
       case 'resume-appt': cpEvents.pauseAppointment(id, false); break;

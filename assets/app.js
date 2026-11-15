@@ -167,6 +167,7 @@ function updateDirection(direction){
 }
 function openRide(direction='outbound',appointmentId=''){
   $('ride-form').reset();clearError('ride-error');
+  $('ride-voice-result').hidden=true;$('ride-voice-fallback').hidden=true;
   selectedAppointment=state.appointments.find(a=>a.id===appointmentId)||upcoming()[0]||null;
   $('ride-appointment-id').value=selectedAppointment?.id||'';
   updateDirection(direction);

@@ -6,14 +6,14 @@
   <meta name="theme-color" content="#164b40">
   <meta name="description" content="taxi Care+：高齡者規律回診交通服務。一次設定固定回診、依看診進度建議出門時間、看完診一鍵叫車。">
   <title>taxi Care+｜規律回診交通服務</title>
-  <link rel="stylesheet" href="./assets/style.css?v=2611c">
-  <link rel="stylesheet" href="./assets/ui.css?v=2611c">
-  <link rel="stylesheet" href="./assets/careplus.css?v=2611c">
-  <script src="./assets/app.js?v=2611c" defer></script>
-  <script src="./assets/careplus-core.js?v=2611c" defer></script>
-  <script src="./assets/careplus-voice.js?v=2611c" defer></script>
-  <script src="./assets/careplus-ui.js?v=2611c" defer></script>
-  <script src="./assets/careplus-demo.js?v=2611c" defer></script>
+  <link rel="stylesheet" href="./assets/style.css?v=2611d">
+  <link rel="stylesheet" href="./assets/ui.css?v=2611d">
+  <link rel="stylesheet" href="./assets/careplus.css?v=2611d">
+  <script src="./assets/app.js?v=2611d" defer></script>
+  <script src="./assets/careplus-core.js?v=2611d" defer></script>
+  <script src="./assets/careplus-voice.js?v=2611d" defer></script>
+  <script src="./assets/careplus-ui.js?v=2611d" defer></script>
+  <script src="./assets/careplus-demo.js?v=2611d" defer></script>
 </head>
 <body>
 <svg class="sprite" aria-hidden="true" focusable="false" width="0" height="0" style="position:absolute;width:0;height:0;overflow:hidden"><defs>
@@ -161,6 +161,13 @@
   <form id="ride-form" novalidate>
     <div class="modal-head"><h2 id="ride-modal-title">叫車</h2><button type="button" class="close-button" data-action="close-dialog" aria-label="關閉叫車視窗">關閉</button></div>
     <p class="modal-sub">確認上下車地點與時間，送出後系統會通知附近司機。</p>
+    <button type="button" class="btn secondary full cp-mic-btn" data-cpa="voice-ride"><svg class="ic ic-inline" aria-hidden="true" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-mic"/></svg>用說的叫車</button>
+    <div id="ride-voice-result" class="cp-voice-box" role="status" hidden></div>
+    <div id="ride-voice-fallback" class="cp-voice-box warn" hidden>
+      <p id="ride-voice-fallback-msg"></p>
+      <div class="field"><label for="ride-voice-input">用打字的</label><input id="ride-voice-input" type="text" maxlength="80" placeholder="明天早上八點半去台大醫院"></div>
+      <button type="button" class="btn secondary full" data-cpa="ride-voice-apply">套用到表單</button>
+    </div>
     <div class="direction-picker" role="group" aria-label="搭車方向"><button type="button" id="outbound-button" class="direction-choice active" data-action="change-direction" data-direction="outbound" aria-pressed="true">去醫院</button><button type="button" id="return-button" class="direction-choice" data-action="change-direction" data-direction="return" aria-pressed="false">回家</button></div>
     <input type="hidden" id="ride-appointment-id"><div class="field"><label for="ride-pickup">從哪裡上車？ <em>必填</em></label><input id="ride-pickup" type="text" maxlength="120" required placeholder="請輸入上車地點"><button type="button" class="quick-select" id="ride-pickup-hospitals" data-action="open-hospitals" data-target="ride-pickup" hidden>選擇附近醫院</button></div><div class="field"><label for="ride-destination">要去哪裡？ <em>必填</em></label><input id="ride-destination" type="text" maxlength="120" required placeholder="請輸入目的地"><button type="button" class="quick-select" id="ride-destination-hospitals" data-action="open-hospitals" data-target="ride-destination">選擇附近醫院</button></div>
     <div class="field-row"><div class="field"><label for="ride-date">搭車日期 <em>必填</em></label><input type="date" id="ride-date" required></div><div class="field"><label for="ride-time">搭車時間 <em>必填</em></label><input type="time" id="ride-time" required></div></div>

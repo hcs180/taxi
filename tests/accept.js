@@ -227,6 +227,34 @@ function expectedDates(start, days, len){
   check('補充', '語音叫車失敗：提示改按按鈕，不會自動叫車', /不支援語音輸入/.test(vf) && /我好了，一鍵叫車/.test(vf) && s.rides.length === 0, vf.replace(/\n+/g,' '));
   await p.close();
 
+  // ---------- 補充：單次叫車的語音輸入 ----------
+  p = await newPage(browser, '?demo&simvoice');
+  await demo(p, 'reset');
+  await p.click('#page-home [data-action="open-ride"][data-direction="outbound"]'); await p.waitForTimeout(200);
+  await p.click('[data-cpa="voice-ride"]'); await p.waitForTimeout(300);
+  const lisRide = await p.locator('#cp-listen').isVisible();
+  await p.waitForTimeout(1700);
+  const rv = await p.evaluate(() => ({pickup:$('ride-pickup').value, dest:$('ride-destination').value, date:$('ride-date').value, time:$('ride-time').value, wheel:$('ride-wheel').checked, dir:currentDirection, res:$('ride-voice-result').innerText, tomorrow:cpAddDays(cpToday(), 1), home:state.preferences.homeAddress}));
+  check('補充', '單次叫車語音：填入去醫院、台大、明天 08:30、輪椅車並顯示確認', lisRide && rv.dir === 'outbound' && rv.pickup === rv.home && /台大醫院/.test(rv.dest) && rv.date === rv.tomorrow && rv.time === '08:30' && rv.wheel && /模擬語音辨識/.test(rv.res) && /請確認/.test(rv.res), JSON.stringify(rv));
+  s = await S(p);
+  check('補充', '單次叫車語音：確認前不建立訂單', s.rides.length === 0);
+  await p.click('#ride-form button[type="submit"]'); await p.waitForTimeout(250);
+  s = await S(p);
+  check('補充', '單次叫車語音：按送出後才建立叫車（輪椅需求保留）', s.rides.length === 1 && s.rides[0].status === 'requested' && s.rides[0].vehicleRequirement === 'wheelchair');
+  await p.close();
+  p = await newPage(browser, '', () => { delete window.SpeechRecognition; delete window.webkitSpeechRecognition; });
+  await p.evaluate(k => localStorage.removeItem(k), KEY); await p.reload(); await p.waitForTimeout(300);
+  await p.evaluate(() => update(s => { s.preferences.homeAddress = '台北市大安區和平東路二段 100 號'; }));
+  await p.click('#page-home [data-action="open-ride"][data-direction="outbound"]'); await p.waitForTimeout(200);
+  await p.click('[data-cpa="voice-ride"]'); await p.waitForTimeout(300);
+  const rf = await p.evaluate(() => ({fb:!$('ride-voice-fallback').hidden, res:!$('ride-voice-result').hidden, time:$('ride-time').value, msg:$('ride-voice-fallback-msg').innerText}));
+  check('補充', '單次叫車語音失敗：改用文字輸入，不自動填入', rf.fb && !rf.res && rf.time === '' && /不支援/.test(rf.msg), JSON.stringify(rf));
+  await p.fill('#ride-voice-input', '後天下午兩點半從馬偕醫院回家，不用輪椅');
+  await p.click('[data-cpa="ride-voice-apply"]'); await p.waitForTimeout(150);
+  const rt = await p.evaluate(() => ({pickup:$('ride-pickup').value, dest:$('ride-destination').value, date:$('ride-date').value, time:$('ride-time').value, wheel:$('ride-wheel').checked, dir:currentDirection, back:$('return-button').getAttribute('aria-pressed'), d2:cpAddDays(cpToday(), 2), res:$('ride-voice-result').innerText}));
+  check('補充', '單次叫車文字：解析回家、馬偕乘車處、後天 14:30、一般車', rt.dir === 'return' && rt.back === 'true' && rt.pickup === '馬偕醫院中山北路大門乘車處' && rt.dest === '台北市大安區和平東路二段 100 號' && rt.date === rt.d2 && rt.time === '14:30' && !rt.wheel && !/模擬/.test(rt.res), JSON.stringify(rt));
+  await p.close();
+
   // ---------- 12 司機轉單 ----------
   p = await newPage(browser, '?demo&simvoice');
   await demo(p, 'load'); await demo(p, 'arrive'); await demo(p, 'done');
