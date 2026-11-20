@@ -306,6 +306,13 @@ function expectedDates(start, days, len){
     await p.click('#cp-gohome-form button[type="submit"]'); await p.waitForTimeout(900);
     s = await S(p);
     check('補充', '我要回家（一般模式）：確認後馬上建立回家叫車', s.rides.length === 1 && s.rides[0].direction === 'return' && s.rides[0].pickup === g.pickup && s.rides[0].destination === '苗栗縣苗栗市聯大 1 號' && (await p.evaluate(() => document.documentElement.dataset.view)) === 'tracking');
+    // 單次叫車：家屬端也要看得到（尋找車輛 → 司機接單 → 已上車）
+    await p.evaluate(() => switchRole('family')); await p.waitForTimeout(200);
+    const fam0 = await txt(p, '#family-status');
+    await p.evaluate(() => { const id = state.rides[0].id; cpApply(s => { cpAssign(s, s.rides.find(r => r.id === id), 'drv-a'); }); cpEvents.driverProgress(id); cpEvents.driverProgress(id); });
+    await p.evaluate(() => switchRole('family')); await p.waitForTimeout(200);
+    const fam1 = await txt(p, '#family-status'), famTl = await txt(p, '#family-timeline'), famNote = await txt(p, '#family-notice');
+    check('補充', '單次叫車：家屬端同步顯示叫車狀態，長輩上車後顯示「已上車」與車牌', /正在尋找車輛/.test(fam0) && !/目前沒有看診行程/.test(fam0) && /已上車，正前往苗栗縣苗栗市聯大 1 號/.test(fam1) && /RAB-5821/.test(fam1) && /已上車/.test(famTl) && /已到家/.test(famTl) && /已上車/.test(famNote), `${fam0.replace(/\n+/g,' ')} ｜ ${fam1.replace(/\n+/g,' ')}`);
     await ctxG.close();
   }
   {

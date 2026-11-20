@@ -390,6 +390,41 @@ function cpTimeline(){
     {label:'已返家', st:rs === 'COMPLETED' ? 'done' : rs === 'ONBOARD' ? 'current' : 'pending', note:rs === 'COMPLETED' ? '已平安到家' : rs === 'ONBOARD' ? '回家途中' : ''}
   ];
 }
+// 單次叫車（「我要去醫院」、沒有看診情境時的「我要回家」）不屬於長期預約的回程，也要讓家屬看得到。
+function cpFamilyRide(s = state){
+  const linked = new Set(((s.careplus && s.careplus.returnRequests) || []).map(r => r.rideId).filter(Boolean));
+  const list = s.rides.filter(r => r.kind !== 'return' && !linked.has(r.id)).sort((x, y) => String(y.createdAt).localeCompare(String(x.createdAt)));
+  const active = list.find(r => ACTIVE_RIDES.includes(r.status));
+  if(active) return active;
+  return list.find(r => r.status === 'completed' && Date.now() - new Date(r.statusUpdatedAt || r.createdAt).getTime() < 3 * 3600e3) || null;
+}
+const cpClock = iso => { const d = iso ? new Date(iso) : null; return d && !isNaN(d) ? d.toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit', hour12:false}) : ''; };
+function cpRenderFamilyRide(r, name){
+  const stat = $('family-status'), tl = $('family-timeline');
+  const d = r.driverId ? cpDriver(r.driverId) : null, dest = r.destination || '目的地', short = dest.split(/[（(]/)[0].trim() || dest;
+  const dir = r.direction === 'return' ? '回家' : '去醫院';
+  const lvl = {requested:0, saved:0, rematching:0, failed:0, assigned:1, arrived_pickup:2, onboard:3, completed:4}[r.status] ?? 0;
+  const waitNote = r.status === 'rematching' ? '原司機無法接單，正在改派其他待命司機' : r.status === 'failed' ? '暫時找不到車輛' : '正在尋找車輛';
+  const steps = [
+    {label:'已送出叫車', note:`${cpClock(r.requestedAt || r.createdAt)}　${r.pickup} → ${dest}`},
+    {label:'司機已接單', note:d ? `${d.plate}・司機 ${d.name}` : waitNote},
+    {label:'司機已到達上車點', note:lvl === 1 ? '司機前往上車點中' : ''},
+    {label:'已上車', note:lvl === 2 ? '等待上車' : ''},
+    {label:r.direction === 'return' ? '已到家' : '已抵達目的地', note:lvl === 3 ? `正在前往${short}` : lvl === 4 ? cpClock(r.statusUpdatedAt) : ''}
+  ].map((it, i) => ({...it, st:i === 0 || i <= lvl ? 'done' : i === lvl + 1 ? (i === 1 && r.status === 'failed' ? 'warn' : 'current') : 'pending'}));
+  const headline = {requested:'已叫車，正在尋找車輛', saved:'已叫車，正在尋找車輛', rematching:'正在改派其他待命司機', failed:'暫時找不到車輛', assigned:'司機已接單，正前往上車點', arrived_pickup:'司機已到達上車點', onboard:`${name}已上車，正前往${short}`, completed:`${name}已抵達${short}`}[r.status] || RIDE_LABEL[r.status] || '';
+  stat.innerHTML = `<div class="section-heading"><h2>目前狀態</h2>${cpPill(`叫車${dir}`)}</div>
+    <p class="family-main-stage">${esc(headline)}</p>
+    <dl class="cp-summary"><div><dt>上車地點</dt><dd>${esc(r.pickup)}</dd></div><div><dt>目的地</dt><dd>${esc(dest)}</dd></div>${d ? `<div><dt>車輛</dt><dd>${esc(d.color)}${esc(d.model)} ${esc(d.plate)}・司機 ${esc(d.name)}（範例）</dd></div>` : ''}</dl>`;
+  tl.innerHTML = steps.map((it, i) => `<div class="timeline-item cp-tl-${it.st} ${it.st === 'done' ? 'done' : ''} ${it.st === 'current' ? 'current' : ''}"><span class="timeline-point" aria-hidden="true">${it.st === 'done' ? cpIcon('check') : it.st === 'warn' ? '!' : i + 1}</span><div><strong>${esc(it.label)}</strong><span class="cp-tl-note">${it.st === 'current' ? '<em class="now">進行中</em>' : ''}${esc(it.note || '')}</span></div></div>`).join('');
+  $('family-last-updated').textContent = `更新 ${cpClock(r.statusUpdatedAt || r.acceptedAt || r.requestedAt || r.createdAt)}`;
+  const notice = r.status === 'onboard' ? `${name}已上車，正在前往${short}。` : r.status === 'completed' ? `${name}已抵達${short}。` : r.status === 'arrived_pickup' ? `司機已到達上車點${d ? `（${d.plate}）` : ''}，${name}準備上車。` : r.status === 'assigned' && d ? `司機 ${d.name}（${d.plate}）已接單，正前往上車點。` : r.status === 'failed' ? '暫時找不到合適車輛，長輩可以重新叫車，也可以打電話關心。' : `正在為${name}尋找車輛。`;
+  $('family-notice').innerHTML = `<p class="notice-text">${esc(notice)}</p>`;
+  const loc = state.sharedLocation, usable = loc && Number.isFinite(Number(loc.lat)) && Number.isFinite(Number(loc.lon));
+  const place = ['onboard','completed'].includes(r.status) ? dest : r.pickup;
+  if(currentRole === 'family') setGoogleMap('family-map', 'family-map-link', usable ? `${Number(loc.lat).toFixed(5)},${Number(loc.lon).toFixed(5)}` : place);
+  $('family-location-caption').textContent = usable ? `長輩同意分享的位置，更新於 ${new Date(loc.at).toLocaleString('zh-TW')}` : `長輩尚未分享位置，地圖顯示${['onboard','completed'].includes(r.status) ? '目的地' : '上車地點'}：${place}`;
+}
 function cpRenderFamily(){
   const sum = $('cp-family-summary'), stat = $('family-status'), tl = $('family-timeline'); if(!sum) return;
   const {a, q, k, ob, rr, ride, b, h} = cpCtx(), name = state.careplus.passengerName || '長輩';
@@ -398,6 +433,8 @@ function cpRenderFamily(){
       <dl class="cp-summary"><div><dt>醫院</dt><dd>${esc(cpHospital(active.hospitalId).name)} ${esc(active.department)} ${esc(active.clinicRoom)}</dd></div><div><dt>固定日期</dt><dd>${esc(cpWeekdaysLabel(active.weekdays))} ${esc(active.appointmentTime)}</dd></div><div><dt>期間</dt><dd>${esc(cpShortDate(active.startDate))} 到 ${esc(cpShortDate(active.endDate))}</dd></div><div><dt>車輛</dt><dd>${esc(cpVehicleLabel(active.wheelchairRequired))}</dd></div></dl>`
     : `<div class="section-heading"><h2>${esc(name)}的預約行程</h2></div><p class="preview-empty">目前沒有長期預約。</p>`;
   const notice = t => { $('family-notice').innerHTML = `<p class="notice-text">${esc(t)}</p>`; };
+  const single = cpFamilyRide();
+  if(single && (ACTIVE_RIDES.includes(single.status) || !a || !q)){ cpRenderFamilyRide(single, name); return; }
   if(!a || !q){ stat.innerHTML = `<div class="section-heading"><h2>目前狀態</h2></div><p class="preview-empty">目前沒有看診行程。</p>`; tl.innerHTML = ''; $('family-last-updated').textContent = ''; notice('目前沒有回診行程，可以協助長輩設定長期預約。'); if(currentRole === 'family') setGoogleMap('family-map', 'family-map-link', '台大醫院'); $('family-location-caption').textContent = '長輩尚未分享位置。'; return; }
   const rs = rr ? rr.status : 'NO_REQUEST', d = ride && ride.driverId ? cpDriver(ride.driverId) : null;
   const headline = rs !== 'NO_REQUEST' && rs !== 'INTEREST_REGISTERED' ? `回程：${CP_RETURN_LABEL[rs]}` : q.phase === 'before' ? `準備出門・建議 ${cpFmt(k.departure)} 出門` : q.phase === 'done' ? (q.mode === 'opd' ? '看診已完成' : '療程已完成') : q.mode === 'opd' ? `等待看診・目前 ${q.currentQueueNumber} 號／${name} ${q.patientQueueNumber} 號` : `療程中・剩 ${k.remaining} 分鐘`;
